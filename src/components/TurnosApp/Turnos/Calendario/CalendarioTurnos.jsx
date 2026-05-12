@@ -1,0 +1,508 @@
+import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarAlt, faChevronLeft, faChevronRight, faEye, faEdit, faUser, faClock, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from 'react-router-dom';
+import { useCalendarioTurnos } from '../../../../hooks/turnos/useCalendarioTurnos';
+import { useCuadrosTurno } from '../../../../hooks/turnos/useCuadrosTurno';
+import { useProcesos } from '../../../../hooks/turnos/useProcesos';
+import { usePerfiles } from '../../../../hooks/turnos/usePerfiles';
+import SearchableDropdown from '../../Turnos/SearchableDropdown';
+import ModalDetalleTurno from './ModalDetalleTurno';
+
+export default function CalendarioTurnos() {
+    const navigate = useNavigate();
+    const [fechaActual, setFechaActual] = useState(new Date());
+    const [filtros, setFiltros] = useState({
+        cuadroTurno: '',
+        proceso: '',
+        perfil: '',
+        mes: fechaActual.getMonth().toString()
+    });
+
+    // Estado para el cuadro seleccionado (para SearchableDropdown)
+    const [selectedCuadro, setSelectedCuadro] = useState(null);
+
+    // ESTADO PARA EL MODAL
+    const [modalDetalle, setModalDetalle] = useState({
+        isOpen: false,
+        turno: null,
+        cuadroNombre: "",
+        equipoNombre: ""
+    });
+
+    // Hooks
+    const { cuadrosTurno, loading: loadingCuadros } = useCuadrosTurno();
+    const { procesos, loading: loadingProcesos } = useProcesos(filtros.cuadroTurno);
+    const { perfiles, loading: loadingPerfiles } = usePerfiles(filtros.cuadroTurno);
+    const { turnos, loading: loadingTurnos, error } = useCalendarioTurnos(filtros, fechaActual);
+
+    // Función para manejar selección de cuadro con SearchableDropdown
+    const handleCuadroSelect = (cuadro) => {
+        setSelectedCuadro(cuadro);
+        setFiltros({
+            ...filtros,
+            cuadroTurno: cuadro.idCuadroTurno.toString(),
+            proceso: '', // Limpiar filtros dependientes
+            perfil: ''   // Limpiar filtros dependientes
+        });
+    };
+
+    // Función para limpiar selección de cuadro
+    const handleCuadroClear = () => {
+        setSelectedCuadro(null);
+        setFiltros({
+            ...filtros,
+            cuadroTurno: '',
+            proceso: '',
+            perfil: ''
+        });
+    };
+
+    // Función para calcular duración total del turno
+    const calcularDuracionTurno = (horaInicio, horaFin) => {
+        if (!horaInicio || !horaFin) return 0;
+
+        const [inicioHora, inicioMin] = horaInicio.split(':').map(Number);
+        const [finHora, finMin] = horaFin.split(':').map(Number);
+
+        let inicioEnMinutos = inicioHora * 60 + inicioMin;
+        let finEnMinutos = finHora * 60 + finMin;
+
+        if (finEnMinutos < inicioEnMinutos) {
+            finEnMinutos += 24 * 60;
+        }
+
+        const diferencia = finEnMinutos - inicioEnMinutos;
+        return Math.round(diferencia / 60);
+    };
+
+    // Obtener semanas del mes
+    const obtenerSemanasDelMes = () => {
+        const año = fechaActual.getFullYear();
+        const mes = fechaActual.getMonth();
+        const primerDia = new Date(año, mes, 1);
+        const ultimoDia = new Date(año, mes + 1, 0);
+
+        const semanas = [];
+        let fechaActualSemana = new Date(primerDia);
+
+        const diaSemana = fechaActualSemana.getDay();
+        const diasHastaLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+        fechaActualSemana.setDate(fechaActualSemana.getDate() - diasHastaLunes);
+
+        let semanaNum = 1;
+        while (fechaActualSemana <= ultimoDia) {
+            const semana = {
+                numero: semanaNum++,
+                dias: []
+            };
+
+            for (let i = 0; i < 7; i++) {
+                const fecha = new Date(fechaActualSemana);
+                semana.dias.push({
+                    fecha: fecha,
+                    fechaString: fecha.toISOString().split('T')[0],
+                    esMesActual: fecha.getMonth() === mes,
+                    numeroDia: fecha.getDate()
+                });
+                fechaActualSemana.setDate(fechaActualSemana.getDate() + 1);
+            }
+
+            semanas.push(semana);
+            if (fechaActualSemana.getMonth() > mes) break;
+        }
+
+        return semanas;
+    };
+
+    // Función para obtener turnos por fecha
+    const obtenerTurnosPorFecha = (fechaString) => {
+        const turnosDelDia = turnos.filter(turno => {
+            if (!turno.fechaInicio) return false;
+
+            let fechaTurnoString;
+            if (turno.fechaInicio.includes('T')) {
+                fechaTurnoString = turno.fechaInicio.split('T')[0];
+            } else {
+                fechaTurnoString = turno.fechaInicio;
+            }
+
+            return fechaTurnoString === fechaString;
+        });
+
+        return turnosDelDia;
+    };
+
+    const calcularHorasSemana = (semana) => {
+        let total = 0;
+        semana.dias.forEach(dia => {
+            const turnosDia = obtenerTurnosPorFecha(dia.fechaString);
+            total += turnosDia.reduce((sum, turno) => sum + (turno.totalHoras || 0), 0);
+        });
+        return total;
+    };
+
+    const navegarMes = (direccion) => {
+        const nuevaFecha = new Date(fechaActual);
+        nuevaFecha.setMonth(nuevaFecha.getMonth() + direccion);
+        setFechaActual(nuevaFecha);
+        setFiltros({ ...filtros, mes: nuevaFecha.getMonth().toString() });
+    };
+
+    // FUNCIÓN PARA ABRIR EL MODAL
+    const handleVerTurno = (turno) => {
+        const cuadroSeleccionado = cuadrosTurno.find(c => c.idCuadroTurno.toString() === filtros.cuadroTurno);
+        const cuadroNombre = cuadroSeleccionado?.nombre || '';
+        const nombreEquipo = cuadroSeleccionado?.nombreEquipo || '';
+        setModalDetalle({
+            isOpen: true,
+            turno: turno,
+            cuadroNombre: cuadroNombre,
+            equipoNombre: nombreEquipo
+        });
+    };
+
+    // FUNCIÓN PARA CERRAR EL MODAL
+    const cerrarModal = () => {
+        setModalDetalle({
+            isOpen: false,
+            turno: null
+        });
+    };
+
+    // FUNCIÓN PARA MANEJAR EDITAR TURNO
+    const handleEditarTurno = (turno) => {
+        const cuadroSeleccionado = cuadrosTurno.find(c => c.idCuadroTurno.toString() === filtros.cuadroTurno);
+        const cuadroNombre = cuadroSeleccionado?.nombre || '';
+        const nombreEquipo = cuadroSeleccionado?.nombreEquipo || '';
+
+        navigate(`/turnos/editar-turno/${turno.idTurno}?cuadroNombre=${encodeURIComponent(cuadroNombre)}&equipoNombre=${encodeURIComponent(nombreEquipo)}`);
+    };
+
+    const aplicarFiltros = () => {
+        // Forzar recarga si es necesario
+        if (filtros.cuadroTurno) {
+            setFiltros({ ...filtros }); //useEffect
+        }
+    };
+
+    const semanas = obtenerSemanasDelMes();
+    const meses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    if (loadingCuadros) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <span className="ml-2">Cargando...</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-6 bg-blue-80 min-h-screen">
+            {/* Header */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-center gap-3 rounded-2xl border-b-4 border-green-600 pl-4 pr-4 pb-1 pt-1 mb-4 w-fit mx-2">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="w-10 h-10 text-green-500" />
+                        <h1 className="text-4xl font-extrabold text-gray-800">
+                            Calendario de Turnos
+                        </h1>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navegarMes(-1)} className="p-2 hover:bg-gray-100 rounded-lg">
+                            <FontAwesomeIcon icon={faChevronLeft} className="w-5 h-5" />
+                        </button>
+                        <h2 className="text-xl font-semibold min-w-[200px] text-center">
+                            {meses[fechaActual.getMonth()]} {fechaActual.getFullYear()}
+                        </h2>
+                        <button onClick={() => navegarMes(1)} className="p-2 hover:bg-gray-100 rounded-lg">
+                            <FontAwesomeIcon icon={faChevronRight} className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filtros */}
+                <div className="space-y-2">
+                    {/* Primera fila: Cuadro de Turno y proceso (SearchableDropdown) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="">
+                            <label className="block text-sm font-medium mb-1">Cuadro de Turno:</label>
+                            <SearchableDropdown
+                                options={cuadrosTurno}
+                                placeholder="Selecciona Cuadro de Turno..."
+                                onSelect={handleCuadroSelect}
+                                onClear={handleCuadroClear}
+                                value={selectedCuadro?.nombre || ""}
+                                displayProperty="nombre"
+                                idProperty="idCuadroTurno"
+                                secondaryProperty="nombreEquipo"
+                                loading={loadingCuadros}
+                                error={null}
+                                className="w-full"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Proceso:</label>
+                            <select
+                                value={filtros.proceso}
+                                onChange={(e) => setFiltros({ ...filtros, proceso: e.target.value })}
+                                className="w-full h-10 px-4 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 box-border"
+                                disabled={!filtros.cuadroTurno || loadingProcesos}
+                            >
+                                <option value="">
+                                    {loadingProcesos ? 'Cargando...' : 'Selecciona Proceso'}
+                                </option>
+                                {procesos.map(proceso => (
+                                    <option key={proceso.idProceso || proceso.id} value={proceso.idProceso || proceso.id}>
+                                        {proceso.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Segunda fila:Perfil y Mes */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Perfil:</label>
+                            <select
+                                value={filtros.perfil}
+                                onChange={(e) => setFiltros({ ...filtros, perfil: e.target.value })}
+                                className="w-full h-10 px-4 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 box-border"
+                                disabled={!filtros.cuadroTurno || loadingPerfiles}
+                            >
+                                <option value="">
+                                    {loadingPerfiles ? 'Cargando...' : 'Selecciona Perfil'}
+                                </option>
+                                {perfiles.map(perfil => (
+                                    <option key={perfil.id} value={perfil.nombre}>
+                                        {perfil.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Mes:</label>
+                            <select
+                                value={filtros.mes}
+                                onChange={(e) => {
+                                    const nuevoMes = parseInt(e.target.value);
+                                    const nuevaFecha = new Date(fechaActual);
+                                    nuevaFecha.setMonth(nuevoMes);
+                                    setFechaActual(nuevaFecha);
+                                    setFiltros({ ...filtros, mes: e.target.value });
+                                }}
+                                className="w-full h-10 px-4 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 box-border"
+                            >
+                                {meses.map((mes, index) => (
+                                    <option key={index} value={index}>{mes}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                    <button
+                        onClick={aplicarFiltros}
+                        className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+                        disabled={loadingTurnos}
+                    >
+                        {loadingTurnos ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                            <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+                        )}
+                        {loadingTurnos ? 'Cargando...' : 'Ver Turnos'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <div className="text-red-800">{error}</div>
+                </div>
+            )}
+
+            {/* Información del cuadro seleccionado */}
+            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-2">Calendario Turnos de Selección:</h3>
+                    <div className="p-1 bg-gray-100 rounded-lg">
+                        <span className="font-medium">Cuadro de turno:</span>
+                        <div className="text-sm text-gray-600 mt-1">
+                            {selectedCuadro ? (
+                                <div>
+                                    <div className="font-medium text-blue-700">{selectedCuadro.nombre}</div>
+                                    {selectedCuadro.nombreEquipo && (
+                                        <div className="text-xs text-gray-500">Equipo: {selectedCuadro.nombreEquipo}</div>
+                                    )}
+                                </div>
+                            ) : (
+                                'No seleccionado'
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Calendario */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                {/* Header del calendario */}
+                <div className="grid grid-cols-8 bg-gray-800 text-white">
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Semana</div>
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Lun</div>
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Mar</div>
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Mié</div>
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Jue</div>
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Vie</div>
+                    <div className="p-4 text-center font-medium border-r border-gray-700">Sáb</div>
+                    <div className="p-4 text-center font-medium">Dom</div>
+                </div>
+
+                {/* FILAS DE SEMANAS */}
+                {semanas.map((semana, semanaIndex) => (
+                    <div key={semanaIndex} className="grid grid-cols-8 border-b border-gray-200 min-h-[200px]">
+                        {/* Columna de semana */}
+                        <div className="bg-gray-100 p-4 border-r border-gray-200 flex flex-col items-center justify-center">
+                            <div className="text-lg font-bold mb-2">Semana {semana.numero}</div>
+                            <div className="text-sm text-gray-600 mb-1">Total Horas:</div>
+                            <div className="text-xl font-bold text-blue-600">{calcularHorasSemana(semana)}</div>
+                        </div>
+
+                        {/* DÍAS DE LA SEMANA */}
+                        {semana.dias.map((dia, diaIndex) => {
+                            const turnosDia = obtenerTurnosPorFecha(dia.fechaString);
+                            const totalHorasDia = turnosDia.reduce((sum, turno) => sum + (turno.totalHoras || 0), 0);
+
+                            return (
+                                <div key={diaIndex} className={`p-2 border-r border-gray-200 ${!dia.esMesActual ? 'bg-gray-50' : ''}`}>
+                                    {/* HEADER DEL DÍA CON NÚMERO */}
+                                    <div className="flex justify-between items-center mb-2">
+                                        {/* NÚMERO DEL DÍA */}
+                                        <div className={`text-lg font-bold px-2 py-1 rounded ${dia.esMesActual
+                                            ? 'text-gray-800 bg-white '
+                                            : 'text-gray-500'
+                                            }`}>
+                                            {dia.numeroDia}
+                                        </div>
+
+                                        {/* TOTAL HORAS DEL DÍA */}
+                                        {totalHorasDia > 0 && (
+                                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-medium">
+                                                {totalHorasDia}h
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* CARDS DE TURNOS */}
+                                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                                        {turnosDia.map((turno, turnoIndex) => {
+                                            const duracionCalculada = calcularDuracionTurno(turno.horaInicio, turno.horaFin);
+
+                                            return (
+                                                <div
+                                                    key={turnoIndex}
+                                                    className="bg-blue-50 border border-blue-200 rounded p-1 text-[10px] hover:bg-blue-100 transition-colors cursor-pointer"
+                                                    onClick={() => handleVerTurno(turno)}
+                                                >
+                                                    {/* Nombre de la persona */}
+                                                    <div className="flex items-center gap-1 mb-1">
+                                                        <FontAwesomeIcon icon={faUser} className="text-blue-600 w-3 h-3" />
+                                                        <span className="font-bold text-blue-800 text-[10px] leading-tight">
+                                                            {turno.nombrePersona || 'Sin asignar'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Horario  */}
+                                                    <div className="flex items-center justify-center bg-gray-100 rounded p-1 mb-1">
+                                                        <FontAwesomeIcon icon={faClock} className="text-gray-600 mr-1 w-3 h-3" />
+                                                        <span className="text-gray-800 font-medium text-[10px] pr-2">
+                                                            {new Date(turno.fechaInicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'N/A'}
+                                                            -
+                                                            {new Date(turno.fechaFin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'N/A'}
+                                                        </span>
+                                                        <span className="bg-green-100 text-green-800 rounded text-[10px] font-medium">
+                                                            {turno.totalHoras || duracionCalculada}h
+                                                        </span>
+                                                        <span
+                                                            className={
+                                                                turno.jornada === 'Mañana'
+                                                                    ? 'bg-yellow-100 text-yellow-800 rounded text-[10px] font-medium pl-1'
+                                                                    : turno.jornada === 'Tarde'
+                                                                        ? 'text-green-500 font-bold'
+                                                                        : turno.jornada === 'Noche'
+                                                                            ? 'text-blue-500 font-bold'
+                                                                            : 'text-gray-500'
+                                                            }
+                                                        >
+                                                            {turno.jornada === 'Mañana'
+                                                                ? '(M)'
+                                                                : turno.jornada === 'Tarde'
+                                                                    ? '(T)'
+                                                                    : turno.jornada === 'Noche'
+                                                                        ? '(N)'
+                                                                        : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Loading específico por día */}
+                                    {loadingTurnos && turnosDia.length === 0 && (
+                                        <div className="text-xs text-center text-gray-500 mt-2">
+                                            <div className="animate-pulse">Cargando...</div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+
+            {/* Resumen */}
+            <div className="bg-white rounded-lg shadow-sm p-4 mt-6">
+                <div className="text-center">
+                    <h3 className="text-lg font-semibold mb-2">Resumen del Mes</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">
+                                {turnos.reduce((sum, turno) => sum + (turno.totalHoras || 0), 0)}
+                            </div>
+                            <div className="text-sm text-gray-600">Total Horas</div>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600">{turnos.length}</div>
+                            <div className="text-sm text-gray-600">Total Turnos</div>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg">
+                            <div className="text-2xl font-bold text-purple-600">
+                                {[...new Set(turnos.map(t => t.nombrePersona))].length}
+                            </div>
+                            <div className="text-sm text-gray-600">Personas Asignadas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* MODAL DE DETALLE DEL TURNO */}
+            <ModalDetalleTurno
+                turno={modalDetalle.turno}
+                isOpen={modalDetalle.isOpen}
+                cuadroNombre={modalDetalle.cuadroNombre}
+                equipoNombre={modalDetalle.equipoNombre}
+                onClose={cerrarModal}
+            />
+        </div>
+    );
+}

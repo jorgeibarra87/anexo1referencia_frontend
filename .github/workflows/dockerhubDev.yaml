@@ -1,0 +1,36 @@
+name: CI/CD Publis Docker image
+
+on:
+  push:
+    tags:
+    - "v*.*.*"
+
+jobs:
+    upload_image:
+        runs-on: ubuntu-22.04
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v2
+              with:
+                username: ${{ secrets.DOCKERHUB_USERNAME }}
+                password: ${{ secrets.DOCKERHUB_TOKEN }}
+            
+            - name: Build Docker image
+              run: |
+                IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/microservices:frontentsolutionv2-image
+                VERSION_TAG=${GITHUB_REF_NAME}
+                docker build --build-arg VERSION=$VERSION_TAG -t $IMAGE_NAME-$VERSION_TAG -t $IMAGE_NAME-latest .
+
+            - name: Push Docker image
+              run: |
+                IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/microservices:frontentsolutionv2-image
+                VERSION_TAG=${GITHUB_REF_NAME}
+                docker push $IMAGE_NAME-$VERSION_TAG
+                docker push $IMAGE_NAME-latest
+
+            - name: Logout from Docker Hub
+              run: docker logout

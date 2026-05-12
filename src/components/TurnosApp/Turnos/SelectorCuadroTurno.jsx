@@ -1,0 +1,222 @@
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarAlt, faCheck, faTimesCircle, faSearch, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
+import { apiTurnoService } from '../../../api/turnos/apiTurnoService';
+import SearchableDropdown from '../Turnos/SearchableDropdown';
+
+export function SelectorCuadroTurno() {
+    const navigate = useNavigate();
+    const [selectedCuadro, setSelectedCuadro] = useState({ id: "", nombre: "" });
+    const [cuadros, setCuadros] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // estados para el filtrado
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filtroCuadros, setFiltroCuadros] = useState([]);
+
+    // Referencia al contenedor principal
+    const containerRef = useRef(null);
+
+    //apiTurnoService
+    useEffect(() => {
+        const fetchCuadros = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const cuadrosFormateados = await apiTurnoService.auxiliares.getCuadrosFormateados();
+                setCuadros(cuadrosFormateados);
+                setFiltroCuadros(cuadrosFormateados); // Inicializar filtrados
+            } catch (err) {
+                setError('Error al cargar los cuadros');
+                console.error('Error al cargar cuadros:', err);
+                setCuadros([]);
+                setFiltroCuadros([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCuadros();
+    }, []);
+
+    // Filtrar cuadros cuando cambie el término de búsqueda
+    useEffect(() => {
+        if (searchTerm === '') {
+            setFiltroCuadros(cuadros);
+        } else {
+            const filtro = cuadros.filter(cuadro =>
+                cuadro.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFiltroCuadros(filtro);
+        }
+    }, [searchTerm, cuadros]);
+
+    // cerrar al dar clic afuera
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Verificar si el clic fue fuera del contenedor principal
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    // Función para manejar la selección de cuadro
+    const handleCuadroSelect = (cuadro) => {
+        setSelectedCuadro({
+            id: cuadro.idCuadroTurno,
+            nombre: cuadro.nombre,
+            idEquipo: cuadro.idEquipo
+        });
+        setSearchTerm(cuadro.nombre); // Mostrar el nombre seleccionado en el input
+        setIsOpen(false); // Cerrar el dropdown
+    };
+
+    // Función para limpiar la selección
+    const handleClear = () => {
+        setSelectedCuadro({ id: "", nombre: "", idEquipo: null });
+        setSearchTerm('');
+        setIsOpen(false);
+    };
+
+    const handleGestionar = () => {
+        if (!selectedCuadro.id) return;
+
+        const params = new URLSearchParams({
+            cuadroId: selectedCuadro.id,
+            cuadroNombre: selectedCuadro.nombre,
+            equipoId: selectedCuadro.idEquipo
+        });
+
+        navigate(`/turnos/gestionar-turnos?${params.toString()}`);
+    };
+
+    return (
+        <div className='w-full mx-auto p-4 bg-opacity-50 bg-blue-80 backdrop-blur-3xl flex justify-center items-center'>
+            {/* referencia aquí */}
+            <div ref={containerRef} className='bg-white p-8 rounded-lg flex flex-col justify-center items-center gap-5 max-w-2xl w-full mx-4'>
+                <div className="flex items-center justify-center gap-3 rounded-2xl border-b-4 border-green-600 pl-4 pr-4 pb-1 pt-1 mb-6 w-fit mx-auto">
+                    <FontAwesomeIcon icon={faCalendarAlt} className="w-10 h-10 text-green-500" />
+                    <h1 className="text-4xl font-extrabold text-gray-800">
+                        Gestión de Turnos
+                    </h1>
+                </div>
+
+                <div className='text-center space-y-2'>
+                    <div className='text-lg font-semibold text-blue-600'>
+                        Selecciona un Cuadro de turno para gestionar los turnos
+                    </div>
+                </div>
+
+                <div className="w-full relative">
+                    <label htmlFor="cuadro-select" className="block text-sm font-bold text-gray-700 mb-2">
+                        Buscar y Seleccionar un Cuadro
+                    </label>
+
+                    {loading ? (
+                        <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-center">
+                            <p className="text-gray-500">Cargando cuadros...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="w-full px-4 py-2 border border-red-300 rounded-md bg-red-50">
+                            <p className="text-red-500 text-center">{error}</p>
+                        </div>
+                    ) : (
+                        <div className="relative">
+                            {/* Input con búsqueda */}
+                            <SearchableDropdown
+                                options={cuadros}
+                                placeholder="Buscar cuadro..."
+                                onSelect={handleCuadroSelect}
+                                onClear={handleClear}
+                                value={selectedCuadro?.nombre || ""}
+                                displayProperty="nombre"
+                                idProperty="idCuadroTurno"
+                                secondaryProperty="nombreEquipo"
+                                loading={loading}
+                                error={error}
+                            />
+
+                            {/* Dropdown de opciones */}
+                            {isOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto min-w-0">
+                                    {filtroCuadros.length === 0 ? (
+                                        <div className="px-4 py-2 text-gray-500 text-center">
+                                            {searchTerm ? 'No se encontraron cuadros' : 'No hay cuadros disponibles'}
+                                        </div>
+                                    ) : (
+                                        filtroCuadros.map((cuadro, index) => (
+                                            <button
+                                                key={cuadro.idCuadroTurno || index}
+                                                onClick={() => handleCuadroSelect(cuadro)}
+                                                className={`w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none min-w-0 ${selectedCuadro.id === cuadro.idCuadroTurno ? 'bg-blue-100' : ''
+                                                    }`}
+                                                title={`${cuadro.nombre}${cuadro.nombreEquipo ? ` - Equipo: ${cuadro.nombreEquipo}` : ''}`}
+                                            >
+                                                <div className="text-xs truncate w-full min-w-0">
+                                                    {cuadro.nombre}
+                                                </div>
+                                                {cuadro.nombreEquipo && (
+                                                    <div className="text-xs text-gray-500 truncate w-full min-w-0">
+                                                        Equipo: {cuadro.nombreEquipo}
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {selectedCuadro.id && (
+                        <div className="text-xs font-extralight text-gray-700 p-2 border-t border-gray-100 mt-2">
+                            <div className="flex items-start gap-2">
+                                <span className="text-gray-600 font-medium min-w-fit">Cuadro seleccionado:</span>
+                                <span
+                                    className="truncate flex-1 min-w-0"
+                                    title={selectedCuadro.nombre}
+                                >
+                                    {selectedCuadro.nombre}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className='flex justify-center items-center gap-4 mt-4'>
+                    <button
+                        onClick={handleGestionar}
+                        className={`px-6 py-2 text-white rounded-lg flex justify-center items-center gap-2 transition-colors ${selectedCuadro.id
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : 'bg-gray-400 cursor-not-allowed'
+                            }`}
+                        disabled={!selectedCuadro.id}
+                    >
+                        <FontAwesomeIcon icon={faCheck} className="text-white w-5 h-5" />
+                        Gestionar Turnos
+                    </button>
+
+                    <Link to="/turnos/cuadro-turnos">
+                        <button className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex justify-center items-center gap-2 transition-colors">
+                            <FontAwesomeIcon icon={faTimesCircle} className="text-white w-5 h-5" />
+                            Cancelar
+                        </button>
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+}
