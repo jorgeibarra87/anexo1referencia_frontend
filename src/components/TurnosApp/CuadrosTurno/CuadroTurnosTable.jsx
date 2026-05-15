@@ -140,7 +140,7 @@ export default function TurnosTable() {
     };
 
     return (
-        <div className="m-8 p-6 bg-white shadow rounded">
+        <div className="m-3 p-3 bg-white shadow rounded min-w-max min-h-max">
             <div className="flex items-center justify-center gap-3 rounded-2xl border-b-4  border-green-600 pl-4 pr-4 pb-1 pt-1 mb-6 w-fit mx-auto">
                 <FontAwesomeIcon icon={faCalendarAlt} className="w-10 h-10 text-green-500" />
                 <h1 className="text-4xl font-extrabold text-gray-800">

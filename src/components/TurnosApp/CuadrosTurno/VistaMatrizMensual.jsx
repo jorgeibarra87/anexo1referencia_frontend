@@ -80,24 +80,32 @@ export default function VistaMatrizMensual() {
         try {
             setSaving(true);
             setError(null);
-            const celdas = [];
-            const tieneCambios = celdasEditadas.size > 0;
 
-            if (tieneCambios) {
-                for (const [clave, codigo] of celdasEditadas) {
-                    const [filaIdx, diaMes] = clave.split('_').map(Number);
-                    const fila = matriz.filas[filaIdx];
-                    if (fila) celdas.push({ idPersona: fila.idPersona, diaMes, codigoJornada: codigo, observacion: null });
-                }
-            } else {
-                for (const fila of matriz.filas) {
-                    for (const celda of (fila.celdas || [])) {
-                        if (celda.codigoJornada) celdas.push({ idPersona: fila.idPersona, diaMes: celda.diaMes, codigoJornada: celda.codigoJornada, observacion: null });
+            const celdasExistentes = new Map();
+            for (const fila of matriz.filas) {
+                for (const celda of (fila.celdas || [])) {
+                    if (celda.codigoJornada) {
+                        celdasExistentes.set(`${fila.idPersona}_${celda.diaMes}`, celda.codigoJornada);
                     }
                 }
             }
+            for (const [clave, codigo] of celdasEditadas) {
+                const [filaIdx, diaMes] = clave.split('_').map(Number);
+                const fila = matriz.filas[filaIdx];
+                if (fila) {
+                    const key = `${fila.idPersona}_${diaMes}`;
+                    if (codigo) celdasExistentes.set(key, codigo);
+                    else celdasExistentes.delete(key);
+                }
+            }
 
-            if (celdas.length === 0 && !tieneCambios) {
+            const celdas = [];
+            for (const [key, codigo] of celdasExistentes) {
+                const [idPersona, diaMes] = key.split('_').map(Number);
+                celdas.push({ idPersona, diaMes, codigoJornada: codigo, observacion: null });
+            }
+
+            if (celdas.length === 0) {
                 setError('No hay datos en la matriz para guardar');
                 setSaving(false);
                 return;
@@ -367,12 +375,9 @@ export default function VistaMatrizMensual() {
                             <button onClick={handleGuardarMatriz} disabled={saving || matriz.filas.length === 0}
                                 className={`px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium
                                     ${saving || matriz.filas.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        : tieneCambios ? 'bg-green-500 text-white hover:bg-green-600'
-                                        : 'bg-blue-500 text-white hover:bg-blue-600'}`}>
+                                        : 'bg-green-500 text-white hover:bg-green-600'}`}>
                                 <FontAwesomeIcon icon={faSave} className="w-4 h-4" />
-                                {saving ? 'Guardando...'
-                                    : tieneCambios ? `Guardar (${celdasEditadas.size})`
-                                    : 'Guardar Matriz'}
+                                {saving ? 'Guardando...' : 'Guardar Matriz'}
                             </button>
                             {tieneCambios && (
                                 <>
