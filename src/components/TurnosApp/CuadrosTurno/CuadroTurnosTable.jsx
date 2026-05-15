@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEdit, faTrash, faPlus, faUsers, faBoxes, faChevronLeft, faChevronRight, faCalendarTimes, faCalendarAlt, faCalendarCheck } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEdit, faTrash, faPlus, faUsers, faBoxes, faChevronLeft, faChevronRight, faCalendarTimes, faCalendarAlt, faCalendarCheck, faTable, faMagic } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { apiCuadroService } from '../../../api/turnos/apiCuadroService';
@@ -150,12 +150,20 @@ export default function TurnosTable() {
 
 
             <div className="flex justify-between items-center mb-4">
-                <Link to="/turnos/crearCuadro">
-                    <button className="px-4 py-2 bg-green-500 text-white rounded-2xl hover:bg-green-600 flex items-center gap-2">
-                        <FontAwesomeIcon icon={faPlus} className="w-5 h-5 text-white" />
-                        Crear Cuadro de Turno
-                    </button>
-                </Link>
+                <div className="flex gap-2">
+                    <Link to="/turnos/crearCuadro">
+                        <button className="px-4 py-2 bg-green-500 text-white rounded-2xl hover:bg-green-600 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faPlus} className="w-5 h-5 text-white" />
+                            Crear Cuadro
+                        </button>
+                    </Link>
+                    <Link to="/turnos/importar-completo">
+                        <button className="px-4 py-2 bg-purple-500 text-white rounded-2xl hover:bg-purple-600 flex items-center gap-2">
+                            <FontAwesomeIcon icon={faMagic} className="w-5 h-5 text-white" />
+                            Importar + Crear Todo
+                        </button>
+                    </Link>
+                </div>
 
                 {/* Selector de elementos por página */}
                 <div className="flex items-center gap-2">
@@ -182,6 +190,8 @@ export default function TurnosTable() {
                     <tr>
                         <th className="p-3">Id</th>
                         <th className="p-3">Cuadro</th>
+                        <th className="p-3">Entidad</th>
+                        <th className="p-3">Tipo</th>
                         <th className="p-3 flex items-center gap-2"><FontAwesomeIcon icon={faUsers} className="w-4 h-4" />Equipo</th>
                         <th className="p-3">Versión</th>
                         <th className="p-3">Estado</th>
@@ -193,6 +203,20 @@ export default function TurnosTable() {
                         <tr key={cuadro.idCuadroTurno} className="border-b">
                             <td className="p-3 text-xs">{cuadro.idCuadroTurno}</td>
                             <td className="p-3 text-xs">{cuadro.nombre}</td>
+                            <td className="p-3 text-xs">
+                                {cuadro.entidad ? (
+                                    <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">{cuadro.entidad}</span>
+                                ) : (
+                                    <span className="text-gray-400">-</span>
+                                )}
+                            </td>
+                            <td className="p-3 text-xs">
+                                {cuadro.tipoPersonal ? (
+                                    <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs">{cuadro.tipoPersonal}</span>
+                                ) : (
+                                    <span className="text-gray-400">-</span>
+                                )}
+                            </td>
                             <td className="p-3 text-xs">{cuadro?.nombreEquipo || 'Sin equipo'}</td>
                             <td className="p-3 text-xs">
                                 <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
@@ -207,13 +231,21 @@ export default function TurnosTable() {
                                     {cuadro.estadoCuadro}
                                 </span>
                             </td>
-                            <td className="p-3 space-x-3">
+                            <td className="p-3 space-x-2">
                                 <Link
                                     to={`/turnos/VerCuadro/${cuadro.idCuadroTurno}`}
                                     title={`Ver cuadro: ${cuadro.nombre}`}
                                     className="inline-block"
                                 >
                                     <FontAwesomeIcon icon={faEye} className="text-green-600 hover:text-green-800 cursor-pointer transition-colors w-4 h-4" />
+                                </Link>
+
+                                <Link
+                                    to={`/turnos/matriz/${cuadro.idCuadroTurno}`}
+                                    title={`Matriz de turnos: ${cuadro.nombre}`}
+                                    className="inline-block"
+                                >
+                                    <FontAwesomeIcon icon={faTable} className="text-purple-600 hover:text-purple-800 cursor-pointer transition-colors w-4 h-4" />
                                 </Link>
 
                                 {/* Botón editar cuadro */}
@@ -231,7 +263,7 @@ export default function TurnosTable() {
                                 {cuadro.estadoCuadro === 'abierto' && (
                                     <button
                                         onClick={() => handleDelete(cuadro.idCuadroTurno, cuadro.nombre)}
-                                        title={`Eliminar cuadro: ${cuadro.nombre}`}
+                                        title={`Cerrar cuadro: ${cuadro.nombre}`}
                                         className="inline-block"
                                     >
                                         <FontAwesomeIcon icon={faCalendarTimes} className="text-red-600 hover:text-red-800 cursor-pointer transition-colors w-4 h-4" />

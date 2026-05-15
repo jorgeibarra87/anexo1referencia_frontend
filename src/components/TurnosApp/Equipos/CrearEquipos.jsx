@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle, faSave, faUser, faArrowLeft, faEdit, faPlus, faUserPlus, faTimes, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faTimesCircle, faSave, faUser, faArrowLeft, faEdit, faPlus, faUserPlus, faTimes, faUsers, faUserPlus as faPersonPlus } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 import { apiEquipoService } from '../../../api/turnos/apiEquipoService';
+import { personasService, personasTitulosService } from '../../../api/turnos/apiPersonasService';
+import { titulosService } from '../../../api/turnos/apiTitulosService';
 import SincronizarPersona from './SincronizarPersona';
 
 export default function CrearEquipo() {
@@ -48,6 +50,44 @@ export default function CrearEquipo() {
     const [equipoOriginal, setEquipoOriginal] = useState(null);
     const [observaciones, setObservaciones] = useState("");
 
+
+    // Entidad y tipo de personal
+    const [entidadSeleccionada, setEntidadSeleccionada] = useState("");
+
+    const ENTIDADES = [
+        { valor: '', label: '-- Sin entidad --' },
+        { valor: 'FUNCIONARIOS_PLANTA', label: 'Funcionarios de Planta' },
+        { valor: 'ASICA', label: 'ASICA' },
+        { valor: 'SIMED', label: 'SIMED' },
+        { valor: 'ASOCIRGE', label: 'ASOCIRGE' },
+        { valor: 'ASOMI', label: 'ASOMI' },
+        { valor: 'ASOTERAPEUTAS', label: 'ASOTERAPEUTAS' },
+        { valor: 'ASTRASALUD', label: 'ASTRASALUD' },
+        { valor: 'IMPORSALUD', label: 'IMPORSALUD' },
+        { valor: 'SAIRENA', label: 'SAIRENA' },
+        { valor: 'SINTRAOEMPUH', label: 'SINTRAOEMPUH' },
+        { valor: 'SITSALUD', label: 'SITSALUD' },
+        { valor: 'VHR', label: 'VHR' },
+        { valor: 'OTRA', label: 'Otra entidad' },
+    ];
+
+    const TIPOS_PERSONAL = [
+        { valor: '', label: '-- Sin especificar --' },
+        { valor: 'ENFERMERO', label: 'Enfermero(a)' },
+        { valor: 'AUXILIAR', label: 'Auxiliar de Enfermería' },
+        { valor: 'MEDICO', label: 'Médico' },
+        { valor: 'TERAPEUTA', label: 'Terapeuta' },
+        { valor: 'OTRO', label: 'Otro' },
+    ];
+
+    // Modal de creación manual de persona
+    const [showCrearPersona, setShowCrearPersona] = useState(false);
+    const [nuevaPersonaForm, setNuevaPersonaForm] = useState({
+        documento: '', nombres: '', apellidos: '', nombreCompleto: '', email: '', telefono: ''
+    });
+    const [creandoPersona, setCreandoPersona] = useState(false);
+    const [titulosDisponibles, setTitulosDisponibles] = useState([]);
+    const [tituloSeleccionado, setTituloSeleccionado] = useState('');
 
     // Gestión de personas
     const [showPersonasManager, setShowPersonasManager] = useState(false);
@@ -282,6 +322,63 @@ export default function CrearEquipo() {
         setUsuariosDisponibles([]);
     };
 
+    // Abrir modal crear persona manual
+    const handleAbrirCrearPersona = async () => {
+        setShowCrearPersona(true);
+        setTituloSeleccionado('');
+        try {
+            const titulos = await titulosService.getAll();
+            setTitulosDisponibles(titulos || []);
+        } catch (e) {
+            setTitulosDisponibles([]);
+        }
+    };
+
+    // Crear persona manual
+    const handleCrearPersonaManual = async () => {
+        if (!nuevaPersonaForm.documento || !nuevaPersonaForm.nombreCompleto) {
+            setErrorEquipo('Documento y nombre son obligatorios');
+            return;
+        }
+        setCreandoPersona(true);
+        setErrorEquipo(null);
+        try {
+            const personaData = {
+                documento: nuevaPersonaForm.documento.trim(),
+                nombres: nuevaPersonaForm.nombres.trim() || nuevaPersonaForm.nombreCompleto.split(' ')[0],
+                apellidos: nuevaPersonaForm.apellidos.trim() || nuevaPersonaForm.nombreCompleto.substring(nuevaPersonaForm.nombreCompleto.indexOf(' ') + 1),
+                nombreCompleto: nuevaPersonaForm.nombreCompleto.trim(),
+                email: nuevaPersonaForm.email.trim() || null,
+                telefono: nuevaPersonaForm.telefono.trim() || null,
+                estado: true
+            };
+            const personaCreada = await personasService.create(personaData);
+
+            let nombrePerfil = 'Sin título';
+            if (tituloSeleccionado) {
+                    await personasTitulosService.addTituloToPersona(personaCreada.idPersona, tituloSeleccionado);
+                const tituloObj = titulosDisponibles.find(t => t.idTitulo?.toString() === tituloSeleccionado);
+                nombrePerfil = tituloObj?.titulo || 'Sin título';
+            }
+
+            const nuevaPersona = {
+                idPersona: personaCreada.idPersona,
+                nombreCompleto: personaCreada.nombreCompleto,
+                documento: personaCreada.documento,
+                perfil: nombrePerfil,
+                idTitulo: tituloSeleccionado || null
+            };
+            setPersonasEquipo(prev => [...prev, nuevaPersona]);
+            setShowCrearPersona(false);
+            setTituloSeleccionado('');
+            setNuevaPersonaForm({ documento: '', nombres: '', apellidos: '', nombreCompleto: '', email: '', telefono: '' });
+        } catch (err) {
+            setErrorEquipo(err.response?.data?.message || 'Error al crear la persona');
+        } finally {
+            setCreandoPersona(false);
+        }
+    };
+
     // Guardar equipo
     const handleGuardarEquipo = async () => {
         setSaving(true);
@@ -291,6 +388,7 @@ export default function CrearEquipo() {
             const selectionData = {
                 categoria: selectedCategory,
                 subcategoria: selectedOption?.nombre || null,
+                entidad: entidadSeleccionada || null,
                 observaciones: observaciones || "",
             };
 
@@ -428,6 +526,28 @@ export default function CrearEquipo() {
                         </div>
                     )}
 
+                    {/* Selector de entidad */}
+                    {selectedCategory && (
+                        <div className="w-full">
+                            <label htmlFor="entidad-select-eq" className="block text-sm font-medium text-gray-700 mb-2">
+                                Entidad / Sindicato
+                            </label>
+                            <select
+                                id="entidad-select-eq"
+                                value={entidadSeleccionada}
+                                onChange={(e) => setEntidadSeleccionada(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                {ENTIDADES.map(ent => (
+                                    <option key={ent.valor} value={ent.valor}>{ent.label}</option>
+                                ))}
+                            </select>
+                            {entidadSeleccionada && (
+                                <p className="mt-1 text-xs text-gray-600">Entidad: {entidadSeleccionada}</p>
+                            )}
+                        </div>
+                    )}
+
                     <div className="w-full">
                         <label htmlFor="observaciones" className="block text-sm font-medium text-gray-700 mb-2">
                             Observaciones
@@ -495,13 +615,22 @@ export default function CrearEquipo() {
                     <div className='w-full max-w-4xl'>
                         <div className='flex justify-between items-center mb-4'>
                             <h3 className='text-xl font-semibold text-gray-800'>Personas del Equipo</h3>
-                            <button
-                                onClick={handleMostrarSelectorPerfil}
-                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 transition-colors"
-                            >
-                                <FontAwesomeIcon icon={faUserPlus} className="w-4 h-4" />
-                                Agregar Persona
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleMostrarSelectorPerfil}
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2 transition-colors"
+                                >
+                                    <FontAwesomeIcon icon={faUserPlus} className="w-4 h-4" />
+                                    Agregar Persona
+                                </button>
+                                <button
+                                    onClick={handleAbrirCrearPersona}
+                                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2 transition-colors"
+                                >
+                                    <FontAwesomeIcon icon={faPersonPlus} className="w-4 h-4" />
+                                    Crear Manual
+                                </button>
+                            </div>
                         </div>
 
                         {personasEquipo.length === 0 ? (
@@ -711,6 +840,85 @@ export default function CrearEquipo() {
                     onClose={() => setShowSincronizarPersona(false)}
                     onPersonaSincronizada={handlePersonaSincronizada}
                 />
+            )}
+
+            {/* MODAL CREAR PERSONA MANUAL */}
+            {showCrearPersona && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-800">Crear Persona Manualmente</h3>
+                            <button onClick={() => setShowCrearPersona(false)} className="text-gray-400 hover:text-red-600">
+                                <FontAwesomeIcon icon={faTimesCircle} className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Documento *</label>
+                                <input type="text" value={nuevaPersonaForm.documento}
+                                    onChange={(e) => setNuevaPersonaForm({...nuevaPersonaForm, documento: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Número de documento" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+                                <input type="text" value={nuevaPersonaForm.nombreCompleto}
+                                    onChange={(e) => setNuevaPersonaForm({...nuevaPersonaForm, nombreCompleto: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Nombres y apellidos" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
+                                    <input type="text" value={nuevaPersonaForm.nombres}
+                                        onChange={(e) => setNuevaPersonaForm({...nuevaPersonaForm, nombres: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
+                                    <input type="text" value={nuevaPersonaForm.apellidos}
+                                        onChange={(e) => setNuevaPersonaForm({...nuevaPersonaForm, apellidos: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" value={nuevaPersonaForm.email}
+                                    onChange={(e) => setNuevaPersonaForm({...nuevaPersonaForm, email: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="correo@ejemplo.com" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                <input type="text" value={nuevaPersonaForm.telefono}
+                                    onChange={(e) => setNuevaPersonaForm({...nuevaPersonaForm, telefono: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Título / Perfil</label>
+                                <select value={tituloSeleccionado}
+                                    onChange={(e) => setTituloSeleccionado(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    <option value="">-- Sin título --</option>
+                                    {titulosDisponibles.map(t => (
+                                        <option key={t.idTitulo} value={t.idTitulo}>{t.titulo}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        {errorEquipo && (
+                            <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm">{errorEquipo}</div>
+                        )}
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button onClick={() => setShowCrearPersona(false)}
+                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm">
+                                Cancelar
+                            </button>
+                            <button onClick={handleCrearPersonaManual} disabled={creandoPersona}
+                                className={`px-4 py-2 text-white rounded-lg text-sm flex items-center gap-2
+                                    ${creandoPersona ? 'bg-gray-400' : 'bg-purple-500 hover:bg-purple-600'}`}>
+                                {creandoPersona ? 'Creando...' : 'Crear y Asignar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

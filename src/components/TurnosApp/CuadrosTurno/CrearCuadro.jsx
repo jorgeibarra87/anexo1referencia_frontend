@@ -68,6 +68,38 @@ export default function CrearCuadro() {
     const [errorCuadro, setErrorCuadro] = useState(null);
     const [observaciones, setObservaciones] = useState("");
 
+    // Estados para entidad y tipo de personal
+    const [entidadSeleccionada, setEntidadSeleccionada] = useState("");
+    const [tipoPersonalSeleccionado, setTipoPersonalSeleccionado] = useState("");
+
+    const ENTIDADES = [
+        { valor: '', label: '-- Sin entidad específica --' },
+        { valor: 'FUNCIONARIOS_PLANTA', label: 'Funcionarios de Planta' },
+        { valor: 'ASICA', label: 'ASICA' },
+        { valor: 'SIMED', label: 'SIMED' },
+        { valor: 'ASOCIRGE', label: 'ASOCIRGE' },
+        { valor: 'ASOMI', label: 'ASOMI' },
+        { valor: 'ASOTERAPEUTAS', label: 'ASOTERAPEUTAS' },
+        { valor: 'ASTRASALUD', label: 'ASTRASALUD' },
+        { valor: 'IMPORSALUD', label: 'IMPORSALUD' },
+        { valor: 'SAIRENA', label: 'SAIRENA' },
+        { valor: 'SINTRAOEMPUH', label: 'SINTRAOEMPUH' },
+        { valor: 'SITSALUD', label: 'SITSALUD' },
+        { valor: 'VHR', label: 'VHR' },
+        { valor: 'INSACON', label: 'INSACON' },
+        { valor: 'CLINIREUMA', label: 'CLINIREUMA' },
+        { valor: 'OTRA', label: 'Otra entidad' },
+    ];
+
+    const TIPOS_PERSONAL = [
+        { valor: '', label: '-- Sin especificar --' },
+        { valor: 'ENFERMERO', label: 'Enfermero(a)' },
+        { valor: 'AUXILIAR', label: 'Auxiliar de Enfermería' },
+        { valor: 'MEDICO', label: 'Médico' },
+        { valor: 'TERAPEUTA', label: 'Terapeuta' },
+        { valor: 'OTRO', label: 'Otro' },
+    ];
+
     // Estados específicos para edición
     const [loadingCuadroData, setLoadingCuadroData] = useState(false);
     const [cuadroOriginal, setCuadroOriginal] = useState(null);
@@ -317,6 +349,8 @@ export default function CrearCuadro() {
                 anio: isEditMode ? cuadroOriginal.anio : fechaActual.getFullYear(),
                 mes: isEditMode ? cuadroOriginal.mes : fechaActual.getMonth() + 1,
                 turnoExcepcion: isEditMode ? cuadroOriginal.turnoExcepcion : false,
+                entidad: entidadSeleccionada || null,
+                tipoPersonal: tipoPersonalSeleccionado || null,
                 idEquipo: parseInt(selectedEquipo.id),
                 observaciones: observaciones.trim() || null,
             };
@@ -536,6 +570,44 @@ export default function CrearCuadro() {
                                     Equipo seleccionado: {selectedEquipo.nombre}
                                 </p>
                             )}
+                        </div>
+                    )}
+
+                    {/* Selector de entidad */}
+                    {selectedCategory && selectedCategory !== 'Multiproceso' && (
+                        <div className="w-full">
+                            <label htmlFor="entidad-select" className="block text-sm font-medium text-gray-700 mb-2">
+                                Entidad / Sindicato
+                            </label>
+                            <select
+                                id="entidad-select"
+                                value={entidadSeleccionada}
+                                onChange={(e) => setEntidadSeleccionada(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                {ENTIDADES.map(ent => (
+                                    <option key={ent.valor} value={ent.valor}>{ent.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Selector de tipo de personal */}
+                    {selectedCategory && selectedCategory !== 'Multiproceso' && (
+                        <div className="w-full">
+                            <label htmlFor="tipopersonal-select" className="block text-sm font-medium text-gray-700 mb-2">
+                                Tipo de Personal
+                            </label>
+                            <select
+                                id="tipopersonal-select"
+                                value={tipoPersonalSeleccionado}
+                                onChange={(e) => setTipoPersonalSeleccionado(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                {TIPOS_PERSONAL.map(tp => (
+                                    <option key={tp.valor} value={tp.valor}>{tp.label}</option>
+                                ))}
+                            </select>
                         </div>
                     )}
 
