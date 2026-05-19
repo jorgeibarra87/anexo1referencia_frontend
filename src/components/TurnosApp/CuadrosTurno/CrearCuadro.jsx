@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimesCircle, faSave, faUser, faArrowLeft, faEdit, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 import { apiCuadroService } from '../../../api/turnos/apiCuadroService';
+import { entidadService } from '../../../api/turnos/apiEntidadService';
+import { tipoPersonalService } from '../../../api/turnos/apiTipoPersonalService';
 
 
 export default function CrearCuadro() {
@@ -71,34 +73,13 @@ export default function CrearCuadro() {
     // Estados para entidad y tipo de personal
     const [entidadSeleccionada, setEntidadSeleccionada] = useState("");
     const [tipoPersonalSeleccionado, setTipoPersonalSeleccionado] = useState("");
+    const [entidadesList, setEntidadesList] = useState([]);
+    const [tiposPersonalList, setTiposPersonalList] = useState([]);
 
-    const ENTIDADES = [
-        { valor: '', label: '-- Sin entidad específica --' },
-        { valor: 'FUNCIONARIOS_PLANTA', label: 'Funcionarios de Planta' },
-        { valor: 'ASICA', label: 'ASICA' },
-        { valor: 'SIMED', label: 'SIMED' },
-        { valor: 'ASOCIRGE', label: 'ASOCIRGE' },
-        { valor: 'ASOMI', label: 'ASOMI' },
-        { valor: 'ASOTERAPEUTAS', label: 'ASOTERAPEUTAS' },
-        { valor: 'ASTRASALUD', label: 'ASTRASALUD' },
-        { valor: 'IMPORSALUD', label: 'IMPORSALUD' },
-        { valor: 'SAIRENA', label: 'SAIRENA' },
-        { valor: 'SINTRAOEMPUH', label: 'SINTRAOEMPUH' },
-        { valor: 'SITSALUD', label: 'SITSALUD' },
-        { valor: 'VHR', label: 'VHR' },
-        { valor: 'INSACON', label: 'INSACON' },
-        { valor: 'CLINIREUMA', label: 'CLINIREUMA' },
-        { valor: 'OTRA', label: 'Otra entidad' },
-    ];
-
-    const TIPOS_PERSONAL = [
-        { valor: '', label: '-- Sin especificar --' },
-        { valor: 'ENFERMERO', label: 'Enfermero(a)' },
-        { valor: 'AUXILIAR', label: 'Auxiliar de Enfermería' },
-        { valor: 'MEDICO', label: 'Médico' },
-        { valor: 'TERAPEUTA', label: 'Terapeuta' },
-        { valor: 'OTRO', label: 'Otro' },
-    ];
+    useEffect(() => {
+        entidadService.getAll().then(data => setEntidadesList(Array.isArray(data) ? data : []));
+        tipoPersonalService.getAll().then(data => setTiposPersonalList(Array.isArray(data) ? data : []));
+    }, []);
 
     // Estados específicos para edición
     const [loadingCuadroData, setLoadingCuadroData] = useState(false);
@@ -585,8 +566,9 @@ export default function CrearCuadro() {
                                 onChange={(e) => setEntidadSeleccionada(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                                {ENTIDADES.map(ent => (
-                                    <option key={ent.valor} value={ent.valor}>{ent.label}</option>
+                                    <option value="">-- Sin entidad específica --</option>
+                                {entidadesList.map(ent => (
+                                    <option key={ent.idEntidad} value={ent.nombre}>{ent.nombre}</option>
                                 ))}
                             </select>
                         </div>
@@ -604,8 +586,9 @@ export default function CrearCuadro() {
                                 onChange={(e) => setTipoPersonalSeleccionado(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                                {TIPOS_PERSONAL.map(tp => (
-                                    <option key={tp.valor} value={tp.valor}>{tp.label}</option>
+                                    <option value="">-- Sin especificar --</option>
+                                {tiposPersonalList.map(tp => (
+                                    <option key={tp.idTipoPersonal} value={tp.nombre}>{tp.nombre}</option>
                                 ))}
                             </select>
                         </div>

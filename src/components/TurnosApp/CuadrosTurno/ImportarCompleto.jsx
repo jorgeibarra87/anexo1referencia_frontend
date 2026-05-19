@@ -1,19 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileExcel, faUpload, faCheck, faTimesCircle, faArrowLeft, faMagic, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { apiProgramacionDiariaService } from '../../../api/turnos/apiProgramacionDiariaService';
-
-const ENTIDADES = [
-    { valor: '', label: '-- Sin entidad --' },
-    { valor: 'FUNCIONARIOS_PLANTA', label: 'Funcionarios de Planta' },
-    { valor: 'ASICA', label: 'ASICA' }, { valor: 'SIMED', label: 'SIMED' },
-    { valor: 'ASOCIRGE', label: 'ASOCIRGE' }, { valor: 'ASOMI', label: 'ASOMI' },
-    { valor: 'ASOTERAPEUTAS', label: 'ASOTERAPEUTAS' }, { valor: 'ASTRASALUD', label: 'ASTRASALUD' },
-    { valor: 'IMPORSALUD', label: 'IMPORSALUD' }, { valor: 'SAIRENA', label: 'SAIRENA' },
-    { valor: 'SINTRAOEMPUH', label: 'SINTRAOEMPUH' }, { valor: 'SITSALUD', label: 'SITSALUD' },
-    { valor: 'VHR', label: 'VHR' },
-];
+import { entidadService } from '../../../api/turnos/apiEntidadService';
+import { tipoPersonalService } from '../../../api/turnos/apiTipoPersonalService';
 
 export default function ImportarCompleto() {
     const navigate = useNavigate();
@@ -22,6 +13,8 @@ export default function ImportarCompleto() {
     const [importando, setImportando] = useState(false);
     const [error, setError] = useState(null);
     const [resultado, setResultado] = useState(null);
+    const [entidades, setEntidades] = useState([]);
+    const [tiposPersonal, setTiposPersonal] = useState([]);
 
     const [formData, setFormData] = useState({
         anio: new Date().getFullYear().toString(),
@@ -33,6 +26,11 @@ export default function ImportarCompleto() {
 
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+    useEffect(() => {
+        entidadService.getAll().then(data => setEntidades(Array.isArray(data) ? data : []));
+        tipoPersonalService.getAll().then(data => setTiposPersonal(Array.isArray(data) ? data : []));
+    }, []);
 
     const handleFileChange = (e) => {
         const selected = e.target.files?.[0];
@@ -147,8 +145,9 @@ export default function ImportarCompleto() {
                                 <select value={formData.entidad}
                                     onChange={(e) => setFormData({ ...formData, entidad: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-                                    {ENTIDADES.map(e => (
-                                        <option key={e.valor} value={e.valor}>{e.label}</option>
+                                    <option value="">-- Sin entidad --</option>
+                                    {entidades.map(e => (
+                                        <option key={e.idEntidad} value={e.nombre}>{e.nombre}</option>
                                     ))}
                                 </select>
                             </div>
@@ -158,11 +157,9 @@ export default function ImportarCompleto() {
                                     onChange={(e) => setFormData({ ...formData, tipoPersonal: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                                     <option value="">-- Sin especificar --</option>
-                                    <option value="ENFERMERO">Enfermero(a)</option>
-                                    <option value="AUXILIAR">Auxiliar de Enfermería</option>
-                                    <option value="MEDICO">Médico</option>
-                                    <option value="TERAPEUTA">Terapeuta</option>
-                                    <option value="OTRO">Otro</option>
+                                    {tiposPersonal.map(tp => (
+                                        <option key={tp.idTipoPersonal} value={tp.nombre}>{tp.nombre}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

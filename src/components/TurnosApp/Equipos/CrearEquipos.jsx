@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { apiEquipoService } from '../../../api/turnos/apiEquipoService';
 import { personasService, personasTitulosService } from '../../../api/turnos/apiPersonasService';
 import { titulosService } from '../../../api/turnos/apiTitulosService';
+import { entidadService } from '../../../api/turnos/apiEntidadService';
 import SincronizarPersona from './SincronizarPersona';
 
 export default function CrearEquipo() {
@@ -51,34 +52,13 @@ export default function CrearEquipo() {
     const [observaciones, setObservaciones] = useState("");
 
 
-    // Entidad y tipo de personal
+    // Entidad
     const [entidadSeleccionada, setEntidadSeleccionada] = useState("");
+    const [entidadesList, setEntidadesList] = useState([]);
 
-    const ENTIDADES = [
-        { valor: '', label: '-- Sin entidad --' },
-        { valor: 'FUNCIONARIOS_PLANTA', label: 'Funcionarios de Planta' },
-        { valor: 'ASICA', label: 'ASICA' },
-        { valor: 'SIMED', label: 'SIMED' },
-        { valor: 'ASOCIRGE', label: 'ASOCIRGE' },
-        { valor: 'ASOMI', label: 'ASOMI' },
-        { valor: 'ASOTERAPEUTAS', label: 'ASOTERAPEUTAS' },
-        { valor: 'ASTRASALUD', label: 'ASTRASALUD' },
-        { valor: 'IMPORSALUD', label: 'IMPORSALUD' },
-        { valor: 'SAIRENA', label: 'SAIRENA' },
-        { valor: 'SINTRAOEMPUH', label: 'SINTRAOEMPUH' },
-        { valor: 'SITSALUD', label: 'SITSALUD' },
-        { valor: 'VHR', label: 'VHR' },
-        { valor: 'OTRA', label: 'Otra entidad' },
-    ];
-
-    const TIPOS_PERSONAL = [
-        { valor: '', label: '-- Sin especificar --' },
-        { valor: 'ENFERMERO', label: 'Enfermero(a)' },
-        { valor: 'AUXILIAR', label: 'Auxiliar de Enfermería' },
-        { valor: 'MEDICO', label: 'Médico' },
-        { valor: 'TERAPEUTA', label: 'Terapeuta' },
-        { valor: 'OTRO', label: 'Otro' },
-    ];
+    useEffect(() => {
+        entidadService.getAll().then(data => setEntidadesList(Array.isArray(data) ? data : []));
+    }, []);
 
     // Modal de creación manual de persona
     const [showCrearPersona, setShowCrearPersona] = useState(false);
@@ -538,8 +518,9 @@ export default function CrearEquipo() {
                                 onChange={(e) => setEntidadSeleccionada(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                                {ENTIDADES.map(ent => (
-                                    <option key={ent.valor} value={ent.valor}>{ent.label}</option>
+                                    <option value="">-- Sin entidad --</option>
+                                {entidadesList.map(ent => (
+                                    <option key={ent.idEntidad} value={ent.nombre}>{ent.nombre}</option>
                                 ))}
                             </select>
                             {entidadSeleccionada && (

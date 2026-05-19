@@ -232,11 +232,13 @@ export default function VistaMatrizMensual() {
                         </div>
                         {matriz && (
                             <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-1.5 rounded-lg border">
-                                <span className="font-semibold text-gray-700">{matriz.nombreCuadro}</span>
+                                {matriz.nombreCuadro && <span className="bg-gray-100 text-gray-700 text-xs px-1.5 py-0.5 rounded font-medium"> Cuadro: {matriz.nombreCuadro}</span>}
                                 <span className="text-gray-400">|</span>
+                                
+                                {matriz.entidad && <span className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded font-medium">Entidad: {matriz.entidad}</span>}
+                                {matriz.tipoPersonal && <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">Tipo: {matriz.tipoPersonal}</span>}
+                                {matriz.nombreEquipo && <span className="bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded font-medium">Equipo: {matriz.nombreEquipo}</span>}
                                 <span>{matriz.mes}/{matriz.anio}</span>
-                                {matriz.entidad && <span className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded font-medium">{matriz.entidad}</span>}
-                                {matriz.tipoPersonal && <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">{matriz.tipoPersonal}</span>}
                                 <span className="text-gray-400">|</span>
                                 <span className="text-gray-500">{matriz.filas.length} pers.</span>
                                 <span className="text-gray-500">{diasDelMes} días</span>

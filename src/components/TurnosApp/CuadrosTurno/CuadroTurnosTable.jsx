@@ -205,7 +205,7 @@ export default function TurnosTable() {
                             <td className="p-3 text-xs">{cuadro.nombre}</td>
                             <td className="p-3 text-xs">
                                 {cuadro.entidad ? (
-                                    <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">{cuadro.entidad}</span>
+                                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">{cuadro.entidad}</span>
                                 ) : (
                                     <span className="text-gray-400">-</span>
                                 )}

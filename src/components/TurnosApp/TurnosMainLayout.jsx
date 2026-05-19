@@ -44,6 +44,9 @@ import SeccionesTable from './Administrador/Secciones/SeccionesTable';
 import SubseccionesTable from './Administrador/Subsecciones/SubseccionesTable';
 import TitulosTable from './Administrador/Titulos/TitulosTable';
 import TipoFormacionTable from './Administrador/Titulos/TipoFormacionTable';
+import EntidadesTable from './Administrador/Entidades/EntidadesTable';
+import TiposPersonalTable from './Administrador/TiposPersonal/TiposPersonalTable';
+import TipoJornadaTable from './Administrador/TipoJornada/TipoJornadaTable';
 
 // Reportes
 import ReportesFiltro from './Reportes/ReportesFiltro';
@@ -112,6 +115,9 @@ const TurnosMainLayout = () => {
                 <Route path="titulos" element={<TitulosTable />} />
                 <Route path="tipoformacion" element={<TipoFormacionTable />} />
                 <Route path="bloqueservicio" element={<BloqueServicioTable />} />
+                <Route path="entidades" element={<EntidadesTable />} />
+                <Route path="tipospersonal" element={<TiposPersonalTable />} />
+                <Route path="tipojornada" element={<TipoJornadaTable />} />
 
                 {/* Rutas de Reportes */}
                 <Route path="reportesfiltro" element={<ReportesFiltro />} />

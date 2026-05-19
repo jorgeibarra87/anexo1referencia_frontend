@@ -163,7 +163,10 @@ export default function Sidebar({ componente: Componente }) {
               { nombre: 'Bloque Servicio', ruta: '/turnos/bloqueservicio', roles: ['ROLE_ADMINISTRADOR'] },
               { nombre: 'Reportes', ruta: '/turnos/reportesfiltro', roles: ['ROLE_ADMINISTRADOR'] },
               { nombre: 'Notificacion Correo', ruta: '/turnos/notificacionCorreo', roles: ['ROLE_ADMINISTRADOR'] },
-              { nombre: 'Notificacion Automática', ruta: '/turnos/notificacionAutomatica', roles: ['ROLE_ADMINISTRADOR'] }
+              { nombre: 'Notificacion Automática', ruta: '/turnos/notificacionAutomatica', roles: ['ROLE_ADMINISTRADOR'] },
+              { nombre: 'Entidades', ruta: '/turnos/entidades', roles: ['ROLE_ADMINISTRADOR'] },
+              { nombre: 'Tipos Personal', ruta: '/turnos/tipospersonal', roles: ['ROLE_ADMINISTRADOR'] },
+              { nombre: 'Tipos Jornada', ruta: '/turnos/tipojornada', roles: ['ROLE_ADMINISTRADOR'] }
             ]
           }
         ]
