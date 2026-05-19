@@ -264,7 +264,7 @@ export default function NotificacionAutomatica() {
                                 <div className='text-xs text-gray-500 mt-1'>Activados manualmente</div>
                             </div>
                             <div className='bg-white p-4 rounded-lg border'>
-                                <div className='text-2xl font-bold text-purple-600 mb-1'>
+                                <div className='text-2xl font-bold text-gray-700 mb-1'>
                                     {correosActivos.length}
                                 </div>
                                 <div className='text-sm text-gray-600'>Total Destinatarios</div>
@@ -338,7 +338,7 @@ export default function NotificacionAutomatica() {
                             disabled={simulandoCambioTurno || correosActivos.length === 0}
                             className={`p-4 rounded-lg font-medium flex flex-col items-center gap-2 transition-all ${simulandoCambioTurno || correosActivos.length === 0
                                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                                : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg'
+                                : 'bg-gray-700 text-white hover:bg-gray-800 shadow-md hover:shadow-lg'
                                 }`}
                         >
                             {simulandoCambioTurno ? (

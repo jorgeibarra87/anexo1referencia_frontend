@@ -154,7 +154,7 @@ export function VerTurno() {
                     </div>
 
                     {/* Detalles del Turno */}
-                    <div className='bg-blue-50 border border-purple-200 rounded-lg p-4'>
+                    <div className='bg-blue-50 border border-gray-300 rounded-lg p-4'>
                         <h3 className='text-lg font-semibold text-blue-800 mb-4'>Detalles del Turno</h3>
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
                             <div>

@@ -625,7 +625,7 @@ export default function CrearEquipo() {
                                 </button>
                                 <button
                                     onClick={handleAbrirCrearPersona}
-                                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center gap-2 transition-colors"
+                                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 flex items-center gap-2 transition-colors"
                                 >
                                     <FontAwesomeIcon icon={faPersonPlus} className="w-4 h-4" />
                                     Crear Manual
@@ -913,7 +913,7 @@ export default function CrearEquipo() {
                             </button>
                             <button onClick={handleCrearPersonaManual} disabled={creandoPersona}
                                 className={`px-4 py-2 text-white rounded-lg text-sm flex items-center gap-2
-                                    ${creandoPersona ? 'bg-gray-400' : 'bg-purple-500 hover:bg-purple-600'}`}>
+                                    ${creandoPersona ? 'bg-gray-400' : 'bg-gray-700 hover:bg-gray-800'}`}>
                                 {creandoPersona ? 'Creando...' : 'Crear y Asignar'}
                             </button>
                         </div>

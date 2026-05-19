@@ -485,8 +485,8 @@ export default function CalendarioTurnos() {
                             <div className="text-2xl font-bold text-green-600">{turnos.length}</div>
                             <div className="text-sm text-gray-600">Total Turnos</div>
                         </div>
-                        <div className="bg-purple-50 p-4 rounded-lg">
-                            <div className="text-2xl font-bold text-purple-600">
+                        <div className="bg-gray-100 p-4 rounded-lg">
+                            <div className="text-2xl font-bold text-gray-600">
                                 {[...new Set(turnos.map(t => t.nombrePersona))].length}
                             </div>
                             <div className="text-sm text-gray-600">Personas Asignadas</div>

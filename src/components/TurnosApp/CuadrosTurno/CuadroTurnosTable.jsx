@@ -158,7 +158,7 @@ export default function TurnosTable() {
                         </button>
                     </Link>
                     <Link to="/turnos/importar-completo">
-                        <button className="px-4 py-2 bg-purple-500 text-white rounded-2xl hover:bg-purple-600 flex items-center gap-2">
+                        <button className="px-4 py-2 bg-gray-700 text-white rounded-2xl hover:bg-gray-800 flex items-center gap-2">
                             <FontAwesomeIcon icon={faMagic} className="w-5 h-5 text-white" />
                             Importar + Crear Todo
                         </button>
@@ -205,7 +205,7 @@ export default function TurnosTable() {
                             <td className="p-3 text-xs">{cuadro.nombre}</td>
                             <td className="p-3 text-xs">
                                 {cuadro.entidad ? (
-                                    <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">{cuadro.entidad}</span>
+                                    <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">{cuadro.entidad}</span>
                                 ) : (
                                     <span className="text-gray-400">-</span>
                                 )}
@@ -245,7 +245,7 @@ export default function TurnosTable() {
                                     title={`Matriz de turnos: ${cuadro.nombre}`}
                                     className="inline-block"
                                 >
-                                    <FontAwesomeIcon icon={faTable} className="text-purple-600 hover:text-purple-800 cursor-pointer transition-colors w-4 h-4" />
+                                    <FontAwesomeIcon icon={faTable} className="text-gray-600 hover:text-gray-800 cursor-pointer transition-colors w-4 h-4" />
                                 </Link>
 
                                 {/* Botón editar cuadro */}

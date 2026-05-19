@@ -246,7 +246,7 @@ export default function VistaMatrizMensual() {
 
                     <div className="flex flex-wrap items-center gap-2 mt-3">
                         <button onClick={handleAutoLlenar}
-                            className="px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-xs font-medium flex items-center gap-1.5">
+                            className="px-3 py-1.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-xs font-medium flex items-center gap-1.5">
                             <FontAwesomeIcon icon={faEdit} className="w-3 h-3" /> Auto-llenar
                         </button>
                         <label className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-xs font-medium flex items-center gap-1.5 cursor-pointer">

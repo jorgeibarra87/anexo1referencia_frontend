@@ -75,7 +75,7 @@ export default function ImportarCompleto() {
         <div className="w-full min-h-screen bg-gray-50 p-6 flex justify-center items-start pt-12">
             <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full">
                 <div className="flex items-center gap-3 mb-6">
-                    <FontAwesomeIcon icon={faMagic} className="w-8 h-8 text-purple-500" />
+                    <FontAwesomeIcon icon={faMagic} className="w-8 h-8 text-gray-500" />
                     <h1 className="text-2xl font-extrabold text-gray-800">Importación Completa</h1>
                 </div>
 
@@ -83,7 +83,7 @@ export default function ImportarCompleto() {
                     <>
                         <p className="text-gray-600 mb-6">Sube un archivo Excel con los datos del personal y sus turnos. El sistema creará automáticamente las personas, el equipo, el cuadro y la matriz de turnos.</p>
 
-                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors">
+                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
                             <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" id="file-input" />
                             <label htmlFor="file-input" className="cursor-pointer">
                                 <FontAwesomeIcon icon={faUpload} className="w-12 h-12 text-gray-400 mb-4" />
@@ -98,7 +98,7 @@ export default function ImportarCompleto() {
 
                         <div className="mt-4">
                             <a href={apiProgramacionDiariaService.descargarPlantilla(31)} download
-                                className="text-purple-600 hover:text-purple-800 text-sm flex items-center gap-1">
+                                className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-1">
                                 <FontAwesomeIcon icon={faDownload} className="w-3 h-3" /> Descargar plantilla
                             </a>
                         </div>
@@ -111,7 +111,7 @@ export default function ImportarCompleto() {
                                 <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" /> Volver
                             </button>
                             <button onClick={() => setStep(2)} disabled={!file}
-                                className={`px-6 py-2 rounded-lg text-sm ${!file ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-purple-500 text-white hover:bg-purple-600'}`}>
+                                className={`px-6 py-2 rounded-lg text-sm ${!file ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-700 text-white hover:bg-gray-800'}`}>
                                 Siguiente: Configurar →
                             </button>
                         </div>
@@ -121,7 +121,7 @@ export default function ImportarCompleto() {
                 {step === 2 && (
                     <>
                         <div className="flex items-center gap-2 mb-6">
-                            <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-bold">Archivo: {file?.name}</span>
+                            <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold">Archivo: {file?.name}</span>
                         </div>
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ export default function ImportarCompleto() {
                             <button onClick={() => setStep(1)}
                                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm">← Atrás</button>
                             <button onClick={handleSubmit} disabled={importando}
-                                className={`px-6 py-2 rounded-lg text-sm flex items-center gap-2 ${importando ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-purple-500 text-white hover:bg-purple-600'}`}>
+                                className={`px-6 py-2 rounded-lg text-sm flex items-center gap-2 ${importando ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-gray-700 text-white hover:bg-gray-800'}`}>
                                 {importando ? (
                                     <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Importando...</>
                                 ) : (
@@ -213,7 +213,7 @@ export default function ImportarCompleto() {
                         </div>
                         <div className="flex justify-center gap-4 mt-6">
                             <button onClick={() => navigate(`/turnos/matriz/${resultado.idCuadro}`)}
-                                className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm">
+                                className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-sm">
                                 Ver Matriz
                             </button>
                             <button onClick={() => navigate('/turnos/cuadro-turnos')}
