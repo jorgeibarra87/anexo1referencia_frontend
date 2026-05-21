@@ -22,6 +22,7 @@ import ReportesIndex from '../monitorizacionHc/ReportesIndex';
 import GenSerRipsCambioSipEstado from '../facturacion/GenSerRipsCambioSipEstado';
 import { getRehabilitacionRoutes } from '../../modules/rehabilitacion/routes';
 import { getReferenciacontrarreferenciaRoutes } from '../../modules/referencia-contrareferencia/routes';
+import { getAnexo1Routes } from '../../modules/anexo1/routes';
 import TurnosMainLayout from '../TurnosApp/TurnosMainLayout';
 
 export default function RutasConfig() {
@@ -139,6 +140,9 @@ export default function RutasConfig() {
                 </Route>
                 <Route path='/referenciacontrareferencia'>
                     {getReferenciacontrarreferenciaRoutes(isLogged, loading)}
+                </Route>
+                <Route path='/anexo1'>
+                    {getAnexo1Routes(isLogged, loading)}
                 </Route>
                 
                 <Route path='/turnos/*' element={

@@ -75,6 +75,16 @@ export default function Sidebar({ componente: Componente }) {
           ]
         },
         {
+          nombre: 'Anexo 1 - Ref y Contraref',
+          roles: ['ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_INDEX'],
+          submenu: [
+            { nombre: 'Vista General', ruta: '/anexo1/general', roles: ['ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_EXPORTAR_DATA', 'ROLE_REFERENCIA_FORMULARIO'] },
+            { nombre: 'Inicio de Trámite', ruta: '/anexo1/tramite', roles: ['ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_FORMULARIO'] },
+            { nombre: 'Seg. Intrahospitalario', ruta: '/anexo1/seguimiento-intra', roles: ['ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_FORMULARIO'] },
+            { nombre: 'Seg. Ambulatorio', ruta: '/anexo1/seguimiento-ambulatorio', roles: ['ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_FORMULARIO'] },
+          ]
+        },
+        {
           nombre: 'Facturacion',
           roles: ['ROLE_ADMINISTRADOR','ROLE_FACTURACION'],
           submenu: [
