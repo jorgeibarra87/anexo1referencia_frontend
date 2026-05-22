@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import usePostSeguimientoIntra from "../../hooks/usePostSeguimientoIntra";
+import { actualizar } from "../../api/seguimientoIntrahospitalarioService";
 import Loader from "../../../../components/Loader";
 
-export default function SeguimientoIntraForm() {
+export default function SeguimientoIntraForm({ item, onSaved }) {
   const { data: seguimientoCreado, loading, error, postSeguimiento } = usePostSeguimientoIntra();
   const [tramiteId, setTramiteId] = useState("");
 
@@ -19,17 +20,24 @@ export default function SeguimientoIntraForm() {
     } catch {}
   }
 
+  const esEdicion = !!item;
   const fechaActual = new Date().toISOString().slice(0, 16);
 
   useEffect(() => {
     if (!seguimientoCreado) return;
-    toast.success("Seguimiento intrahospitalario guardado con éxito!");
+    toast.success(esEdicion ? "Seguimiento intrahospitalario actualizado con éxito!" : "Seguimiento intrahospitalario guardado con éxito!");
+    onSaved?.();
   }, [seguimientoCreado]);
 
   useEffect(() => {
     if (!error) return;
-    toast.error("Error al guardar el seguimiento");
+    toast.error(esEdicion ? "Error al actualizar el seguimiento" : "Error al guardar el seguimiento");
   }, [error]);
+
+  useEffect(() => {
+    if (!item) return;
+    setTramiteId(item.tramiteId || "");
+  }, [item]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -41,20 +49,26 @@ export default function SeguimientoIntraForm() {
       return;
     }
 
+    const payload = {
+      tramiteId: parseInt(data.tramiteId),
+      fechaSeguimiento: data.fechaSeguimiento || new Date().toISOString(),
+      prestadorAutorizado: data.prestadorAutorizado,
+      numeroAutorizacion: data.numeroAutorizacion,
+      estadoAutorizacion: data.estadoAutorizacion || "PENDIENTE",
+      auxiliarReferencia: item?.auxiliarReferencia || nombreUsuario,
+      observaciones: data.observaciones
+    };
+
     try {
-      await postSeguimiento({
-        tramiteId: parseInt(data.tramiteId),
-        fechaSeguimiento: data.fechaSeguimiento || new Date().toISOString(),
-        prestadorAutorizado: data.prestadorAutorizado,
-        numeroAutorizacion: data.numeroAutorizacion,
-        estadoAutorizacion: data.estadoAutorizacion || "PENDIENTE",
-        auxiliarReferencia: nombreUsuario,
-        observaciones: data.observaciones
-      });
+      if (esEdicion) {
+        await actualizar(item.id, payload);
+      } else {
+        await postSeguimiento(payload);
+      }
       event.target.reset();
       setTramiteId("");
     } catch {
-      toast.error("Error al guardar el seguimiento");
+      toast.error(esEdicion ? "Error al actualizar el seguimiento" : "Error al guardar el seguimiento");
     }
   };
 
@@ -76,28 +90,29 @@ export default function SeguimientoIntraForm() {
                 <label className="block text-gray-700 text-sm font-bold mb-2">ID del Trámite:</label>
                 <input name="tramiteId" value={tramiteId} onChange={(e) => setTramiteId(e.target.value)}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  type="number" required />
+                  type="number" required disabled={esEdicion} />
 
                 <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Fecha de Seguimiento:</label>
-                <input name="fechaSeguimiento" type="datetime-local" defaultValue={fechaActual}
+                <input name="fechaSeguimiento" type="datetime-local"
+                  defaultValue={esEdicion ? (item.fechaSeguimiento ? new Date(item.fechaSeguimiento).toISOString().slice(0, 16) : fechaActual) : fechaActual}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" />
               </div>
 
               <div className="w-full md:w-1/3 px-3 mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Número de Autorización:</label>
-                <input name="numeroAutorizacion"
+                <input name="numeroAutorizacion" defaultValue={item?.numeroAutorizacion || ""}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   type="text" placeholder="Ingrese autorización" />
 
                 <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Prestador Autorizado:</label>
-                <input name="prestadorAutorizado"
+                <input name="prestadorAutorizado" defaultValue={item?.prestadorAutorizado || ""}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   type="text" />
               </div>
 
               <div className="w-full md:w-1/3 px-3 mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Estado de Autorización:</label>
-                <select name="estadoAutorizacion"
+                <select name="estadoAutorizacion" defaultValue={item?.estadoAutorizacion || "PENDIENTE"}
                   className="form-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                   <option value="PENDIENTE">PENDIENTE</option>
                   <option value="AUTORIZADO">AUTORIZADO</option>
@@ -107,14 +122,14 @@ export default function SeguimientoIntraForm() {
 
                 <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Auxiliar de Referencia:</label>
                 <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                  value={nombreUsuario} disabled />
+                  value={item?.auxiliarReferencia || nombreUsuario} disabled />
               </div>
             </div>
 
             <div className="flex flex-wrap -mx-3 mb-6">
               <div className="w-full px-3">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Observaciones:</label>
-                <textarea name="observaciones" rows={3}
+                <textarea name="observaciones" rows={3} defaultValue={item?.observaciones || ""}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" />
               </div>
             </div>

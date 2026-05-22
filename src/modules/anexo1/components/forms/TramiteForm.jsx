@@ -3,12 +3,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
-import { obtenerPacientePorId } from "../../api/pacienteService";
 import usePostTramite from "../../hooks/usePostTramite";
 import useFetchTipoSolicitudCatalogo from "../../hooks/useFetchTipoSolicitudCatalogo";
+import { actualizarTramite } from "../../api/tramiteService";
 import Loader from "../../../../components/Loader";
 
-export default function TramiteForm() {
+export default function TramiteForm({ tramite, onSaved }) {
   const { data: tiposSolicitud, loading: loadingTipos } = useFetchTipoSolicitudCatalogo();
   const { data: tramiteCreado, loading: loadingPost, error: errorPost, postTramite } = usePostTramite();
   const [infoPaciente, setInfoPaciente] = useState(null);
@@ -24,16 +24,28 @@ export default function TramiteForm() {
   }
 
   const auxiliarReferenciaDefault = nombreUsuario;
+  const esEdicion = !!tramite;
 
   useEffect(() => {
     if (!tramiteCreado) return;
-    toast.success("Trámite guardado con éxito!");
+    toast.success(esEdicion ? "Trámite actualizado con éxito!" : "Trámite guardado con éxito!");
+    onSaved?.();
   }, [tramiteCreado]);
 
   useEffect(() => {
     if (!errorPost) return;
     toast.error("Error al guardar el trámite");
   }, [errorPost]);
+
+  useEffect(() => {
+    if (!tramite) return;
+    setInfoPaciente({
+      id: tramite.pacienteId,
+      eps: tramite.eps || "",
+      servicioOrigen: tramite.servicioOrigen || "",
+      nombreCompleto: tramite.pacienteNombre || "",
+    });
+  }, [tramite]);
 
   const handleSearchDocumento = async () => {
     if (!busqueda.trim()) {
@@ -66,27 +78,35 @@ export default function TramiteForm() {
     const formData = new FormData(event.target);
     const data = Object.fromEntries(formData.entries());
 
-    if (!data.numeroTramite || !data.pacienteId) {
-      toast.error("Debe buscar un paciente antes de guardar");
+    if (!data.numeroTramite || (!esEdicion && !data.pacienteId)) {
+      toast.error(esEdicion ? "El número de trámite es obligatorio" : "Debe buscar un paciente antes de guardar");
       return;
     }
 
+    console.log("Datos del formulario:", data);
+
+    const payload = {
+      numeroTramite: data.numeroTramite,
+      pacienteId: esEdicion ? tramite.pacienteId : parseInt(data.pacienteId),
+      Ingreso: data.Ingreso || null,
+      servicio: data.servicio || null,
+      tipoSolicitudId: data.tipoSolicitudId ? parseInt(data.tipoSolicitudId) : null,
+      descripcion: data.descripcion,
+      estado: data.estado || "PENDIENTE",
+      auxiliarReferencia: auxiliarReferenciaDefault
+    };
+
     try {
-      await postTramite({
-        numeroTramite: data.numeroTramite,
-        pacienteId: parseInt(data.pacienteId),
-        tipoIngreso: data.tipoIngreso || null,
-        servicioOrigen: data.servicioOrigen,
-        tipoSolicitudId: data.tipoSolicitudId ? parseInt(data.tipoSolicitudId) : null,
-        descripcion: data.descripcion,
-        estado: data.estado || "PENDIENTE",
-        auxiliarReferencia: auxiliarReferenciaDefault
-      });
+      if (esEdicion) {
+        await actualizarTramite(tramite.id, payload);
+      } else {
+        await postTramite(payload);
+      }
       event.target.reset();
       setInfoPaciente(null);
       setBusqueda("");
     } catch {
-      toast.error("Error al guardar el trámite");
+      toast.error(esEdicion ? "Error al actualizar el trámite" : "Error al guardar el trámite");
     }
   };
 
@@ -105,16 +125,22 @@ export default function TramiteForm() {
           <div className="p-6">
             <div className="flex flex-wrap -mx-3 mb-6">
               <div className="w-full md:w-1/3 px-3 mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Documento:</label>
-                <div className="flex items-center">
-                  <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    placeholder="123456789" />
-                  <button type="button" onClick={handleSearchDocumento}
-                    className="flex-shrink-0 text-blue-500 hover:text-blue-700 ml-2">
-                    <FontAwesomeIcon icon={faCheckCircle} className="text-2xl" />
-                  </button>
-                </div>
+                {!esEdicion ? (
+                  <>
+                    <label className="block text-gray-700 text-sm font-bold mb-2">Documento:</label>
+                    <div className="flex items-center">
+                      <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        placeholder="123456789" />
+                      <button type="button" onClick={handleSearchDocumento}
+                        className="flex-shrink-0 text-blue-500 hover:text-blue-700 ml-2">
+                        <FontAwesomeIcon icon={faCheckCircle} className="text-2xl" />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">Editando trámite existente</p>
+                )}
 
                 {infoPaciente && (
                   <>
@@ -122,8 +148,8 @@ export default function TramiteForm() {
                     <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">EPS:</label>
                     <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" value={infoPaciente.eps || ""} disabled />
 
-                    <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Servicio Origen:</label>
-                    <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" value={infoPaciente.servicioOrigen || ""} disabled />
+                    <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Servicio:</label>
+                    <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" value={infoPaciente.servicio || ""} disabled />
                   </>
                 )}
               </div>
@@ -136,26 +162,20 @@ export default function TramiteForm() {
                   </>
                 )}
 
-                <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Número de Trámite:</label>
-                <input name="numeroTramite"
+                {/* <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Número de Trámite:</label>
+                <input name="numeroTramite" defaultValue={tramite?.numeroTramite || ""}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  type="text" required />
+                  type="text" required /> */}
 
-                <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Tipo de Ingreso:</label>
-                <select name="tipoIngreso"
-                  className="form-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                  <option value="">Seleccione...</option>
-                  <option value="URGENCIAS">URGENCIAS</option>
-                  <option value="HOSPITALIZACION">HOSPITALIZACION</option>
-                  <option value="CONSULTA_EXTERNA">CONSULTA EXTERNA</option>
-                  <option value="CIRUGIA">CIRUGIA</option>
-                  <option value="OTRO">OTRO</option>
-                </select>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Ingreso:</label>
+                <input name="Ingreso" defaultValue={tramite?.Ingreso || ""}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  type="text" disabled/>
               </div>
 
               <div className="w-full md:w-1/3 px-3 mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Tipo de Solicitud:</label>
-                <select name="tipoSolicitudId"
+                <select name="tipoSolicitudId" defaultValue={tramite?.tipoSolicitudId || ""}
                   className="form-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                   <option value="">Seleccione...</option>
                   {tiposSolicitud.map((ts) => (
@@ -164,7 +184,7 @@ export default function TramiteForm() {
                 </select>
 
                 <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Estado:</label>
-                <select name="estado"
+                <select name="estado" defaultValue={tramite?.estado || "PENDIENTE"}
                   className="form-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                   <option value="PENDIENTE">PENDIENTE</option>
                   <option value="EN_PROCESO">EN PROCESO</option>
@@ -174,14 +194,14 @@ export default function TramiteForm() {
 
                 <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Auxiliar de Referencia:</label>
                 <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                  value={auxiliarReferenciaDefault} disabled />
+                  value={tramite?.auxiliarReferencia || auxiliarReferenciaDefault} disabled />
               </div>
             </div>
 
             <div className="flex flex-wrap -mx-3 mb-6">
               <div className="w-full px-3">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Descripción:</label>
-                <textarea name="descripcion" rows={4}
+                <textarea name="descripcion" rows={4} defaultValue={tramite?.descripcion || ""}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" />
               </div>
             </div>

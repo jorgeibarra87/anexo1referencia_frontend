@@ -110,10 +110,10 @@ export default function Anexo1Table() {
           <thead className="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0 z-10">
             <tr>
               <th className="px-4 py-3">N° Trámite</th>
-              <th className="px-4 py-3">Fecha</th>
+              <th className="px-4 py-3">Fecha Trámite</th>
               <th className="px-4 py-3">Paciente</th>
-              <th className="px-4 py-3">Tipo Ingreso</th>
-              <th className="px-4 py-3">Servicio Origen</th>
+              <th className="px-4 py-3">Ingreso</th>
+              <th className="px-4 py-3">Servicio</th>
               <th className="px-4 py-3">Tipo Solicitud</th>
               <th className="px-4 py-3">Descripción</th>
               <th className="px-4 py-3">Estado</th>
