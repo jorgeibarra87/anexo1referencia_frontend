@@ -250,7 +250,7 @@ export default function Sidebar({ componente: Componente }) {
           <div className="navbar-fixed">
               <Navbar />
           </div>
-          <div className="flex-grow overflow-y-auto p-4"> {/* El contenido principal con scroll propio */}
+          <div className="flex-grow overflow-y-auto"> {/* El contenido principal con scroll propio */}
               {Componente && <Componente />}
           </div>
           <footer className="footer-dinamico flex-shrink-0"> {/* El footer queda fijo en la parte inferior */}

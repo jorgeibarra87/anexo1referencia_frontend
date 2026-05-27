@@ -3,6 +3,7 @@ import { faPencilAlt, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { listarTramites, cambiarEstadoTramite } from '../../api/tramiteService';
 import Pagination from '../../../../components/Pagination';
+import TextoColapsable from '../../../../components/utilities/TextoColapsable';
 
 const PAGE_SIZE = 50;
 
@@ -30,9 +31,9 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
     if (!busqueda.trim()) return true;
     const q = busqueda.toLowerCase();
     return (
-      t.numeroTramite?.toLowerCase().includes(q) ||
+      String(t.id).includes(q) ||
       t.pacienteNombre?.toLowerCase().includes(q) ||
-      t.servicioOrigen?.toLowerCase().includes(q)
+      t.servicio?.toLowerCase().includes(q)
     );
   });
 
@@ -93,11 +94,11 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
                   <td className="px-3 py-1.5">{t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</td>
                   <td className="px-3 py-1.5">{t.pacienteNombre || ""}</td>
                   <td className="px-3 py-1.5">{t.pacienteDocumento || ""}</td>
+                  <td className="px-3 py-1.5">{t.ingreso || ""}</td>
                   <td className="px-3 py-1.5">{t.pacienteEps || ""}</td>
-                  <td className="px-3 py-1.5">{t.Ingreso || ""}</td>
                   <td className="px-3 py-1.5">{t.servicio || ""}</td>
                   <td className="px-3 py-1.5">{t.tipoSolicitudDescripcion || ""}</td>
-                  <td className="px-3 py-1.5 max-w-xs truncate">{t.descripcion || ""}</td>
+                  <td className="px-3 py-1.5 max-w-xs"><TextoColapsable texto={t.descripcion} /></td>
                   <td className="px-3 py-1.5">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getEstadoBadge(t.estado)}`}>
                       {t.estado}
@@ -112,7 +113,7 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
                 </tr>
               ))}
               {data.length === 0 && (
-                <tr><td colSpan={10} className="text-center py-4 text-gray-500">No hay trámites registrados.</td></tr>
+                <tr><td colSpan={12} className="text-center py-4 text-gray-500">No hay trámites registrados.</td></tr>
               )}
             </tbody>
           </table>

@@ -5,10 +5,9 @@ import useFetchEgresos from "../../hooks/useFetchEgresos";
 import { obtenerPorTramiteId as obtenerEgreso } from "../../api/egresoService";
 import Loader from "../../../../components/Loader";
 import * as XLSX from 'xlsx';
-import { toast } from "react-toastify";
+import TextoColapsable from "../../../../components/utilities/TextoColapsable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-solid-svg-icons";
-import ListaColapsable from "../../../../components/utilities/ListaColapsable";
 
 export default function Anexo1Table() {
   const { data: tramites, loading, error, refetch } = useFetchTramites();
@@ -55,15 +54,17 @@ export default function Anexo1Table() {
 
   const datosExportar = (datos) => {
     return datos.map((t) => ({
-      "N° Trámite": t.numeroTramite,
+      "ID Trámite": t.id,
       "Fecha Trámite": t.fechaTramite ? new Date(t.fechaTramite).toLocaleString() : "",
       "Paciente": t.pacienteNombre || "",
-      "Tipo Ingreso": t.tipoIngreso || "",
-      "Servicio Origen": t.servicioOrigen || "",
+      "Documento": t.pacienteDocumento || "",
+      "Ingreso": t.ingreso || "",
+      "EPS": t.pacienteEps || "",
+      "Servicio": t.servicio || "",
       "Tipo Solicitud": t.tipoSolicitudDescripcion || "",
       "Descripción": t.descripcion || "",
       "Estado": t.estado || "",
-      "Auxiliar Referencia": t.auxiliarReferencia || "",
+      "Auxiliar": t.auxiliarReferencia || "",
       "Servicio Egreso": t.egreso?.servicioEgreso || "",
       "Fecha Egreso": t.egreso?.fechaEgreso ? new Date(t.egreso.fechaEgreso).toLocaleString() : "",
     }));
@@ -109,10 +110,12 @@ export default function Anexo1Table() {
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0 z-10">
             <tr>
-              <th className="px-4 py-3">N° Trámite</th>
-              <th className="px-4 py-3">Fecha Trámite</th>
-              <th className="px-4 py-3">Paciente</th>
+              <th className="px-4 py-3">ID</th>
+              <th className="px-4 py-3">Fecha</th>
+              <th className="px-4 py-3">Nombre</th>
+              <th className="px-4 py-3">Documento</th>
               <th className="px-4 py-3">Ingreso</th>
+              <th className="px-4 py-3">EPS</th>
               <th className="px-4 py-3">Servicio</th>
               <th className="px-4 py-3">Tipo Solicitud</th>
               <th className="px-4 py-3">Descripción</th>
@@ -120,22 +123,23 @@ export default function Anexo1Table() {
               <th className="px-4 py-3">Auxiliar</th>
               <th className="px-4 py-3">Servicio Egreso</th>
               <th className="px-4 py-3">Fecha Egreso</th>
-              <th className="px-4 py-3">Seguimiento Intra</th>
             </tr>
           </thead>
           <tbody>
             {tramitesConDetalle.length === 0 && !loadingDetalle && (
-              <tr><td colSpan={12} className="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>
+              <tr><td colSpan={13} className="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>
             )}
             {tramitesConDetalle.map((t, index) => (
               <tr key={t.id || index} className="bg-white border-b hover:bg-gray-50">
-                <td className="px-4 py-2 text-xs font-medium text-gray-900">{t.numeroTramite}</td>
+                <td className="px-4 py-2 text-xs font-medium text-gray-900">{t.id}</td>
                 <td className="px-4 py-2 text-xs">{t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</td>
                 <td className="px-4 py-2 text-xs">{t.pacienteNombre || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.tipoIngreso || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.servicioOrigen || ""}</td>
+                <td className="px-4 py-2 text-xs">{t.pacienteDocumento || ""}</td>
+                <td className="px-4 py-2 text-xs">{t.ingreso || ""}</td>
+                <td className="px-4 py-2 text-xs">{t.pacienteEps || ""}</td>
+                <td className="px-4 py-2 text-xs">{t.servicio || ""}</td>
                 <td className="px-4 py-2 text-xs">{t.tipoSolicitudDescripcion || ""}</td>
-                <td className="px-4 py-2 text-xs max-w-xs truncate">{t.descripcion || ""}</td>
+                <td className="px-4 py-2 text-xs max-w-xs"><TextoColapsable texto={t.descripcion} /></td>
                 <td className="px-4 py-2 text-xs">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoBadge(t.estado)}`}>
                     {t.estado}
@@ -146,16 +150,10 @@ export default function Anexo1Table() {
                 <td className="px-4 py-2 text-xs">
                   {t.egreso?.fechaEgreso ? new Date(t.egreso.fechaEgreso).toLocaleDateString() : "-"}
                 </td>
-                <td className="px-4 py-2 text-xs text-center">
-                  <button onClick={() => handleVerIntra(t.id)}
-                    className="text-blue-500 hover:text-blue-700" title="Ver seguimientos">
-                    <FontAwesomeIcon icon={faEye} />
-                  </button>
-                </td>
               </tr>
             ))}
             {loadingDetalle && (
-              <tr><td colSpan={12} className="text-center py-4"><Loader /></td></tr>
+              <tr><td colSpan={13} className="text-center py-4"><Loader /></td></tr>
             )}
           </tbody>
         </table>
@@ -169,24 +167,20 @@ export default function Anexo1Table() {
                 <thead className="bg-gray-200">
                   <tr>
                     <th className="px-3 py-2">Fecha</th>
-                    <th className="px-3 py-2">Autorización</th>
-                    <th className="px-3 py-2">Prestador</th>
+                    <th className="px-3 py-2">Autorizaci�n</th>
                     <th className="px-3 py-2">Estado</th>
-                    <th className="px-3 py-2">Observaciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {seguimientosIntra.map((s, i) => (
                     <tr key={i} className="border-b">
                       <td className="px-3 py-1">{new Date(s.fechaSeguimiento).toLocaleString()}</td>
-                      <td className="px-3 py-1">{s.numeroAutorizacion || "-"}</td>
-                      <td className="px-3 py-1">{s.prestadorAutorizado || "-"}</td>
+                      <td className="px-3 py-1">{s.autorizacion || s.numeroAutorizacion || "-"}</td>
                       <td className="px-3 py-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getEstadoAutoBadge(s.estadoAutorizacion)}`}>
                           {s.estadoAutorizacion}
                         </span>
                       </td>
-                      <td className="px-3 py-1">{s.observaciones || "-"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -3,7 +3,7 @@ import { useState } from "react";
 const TextoColapsable = ({ texto, limite = 120 }) => {
   const [expandido, setExpandido] = useState(false);
 
-  if (!texto) return <span className="text-gray-500 italic">Sin texto</span>;
+  if (!texto) return <span className="text-gray-500 italic"></span>;
 
   const esLargo = texto.length > limite;
 
