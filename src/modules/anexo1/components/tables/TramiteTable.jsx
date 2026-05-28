@@ -73,38 +73,38 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
           <table className="min-w-full text-xs text-gray-700">
             <thead className="bg-gray-800 text-white">
               <tr>
-                <th className="px-3 py-2 text-left">ID</th>
-                <th className="px-3 py-2 text-left">Fecha Trámite</th>
-                <th className="px-3 py-2 text-left">Nombre</th>
-                <th className="px-3 py-2 text-left">Documento</th>
-                <th className="px-3 py-2 text-left">Ingreso</th>
-                <th className="px-3 py-2 text-left">EPS</th>
-                <th className="px-3 py-2 text-left">Servicio</th>
-                <th className="px-3 py-2 text-left">Tipo Solicitud</th>
-                <th className="px-3 py-2 text-left">Descripción</th>
-                <th className="px-3 py-2 text-left">Estado</th>
-                <th className="px-3 py-2 text-left">Auxiliar</th>
-                <th className="px-3 py-2 text-left">Acciones</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">ID</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Fecha Trámite</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Nombre</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Documento</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Ingreso</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">EPS</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Servicio</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Tipo Solicitud</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Descripción</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Estado</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Auxiliar</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.map((t, i) => (
                 <tr key={t.id || i} className="border-b hover:bg-blue-50">
-                  <td className="px-3 py-1.5 font-semibold text-blue-700">{t.id}</td>
-                  <td className="px-3 py-1.5">{t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</td>
-                  <td className="px-3 py-1.5">{t.pacienteNombre || ""}</td>
-                  <td className="px-3 py-1.5">{t.pacienteDocumento || ""}</td>
-                  <td className="px-3 py-1.5">{t.ingreso || ""}</td>
-                  <td className="px-3 py-1.5">{t.pacienteEps || ""}</td>
-                  <td className="px-3 py-1.5">{t.servicio || ""}</td>
-                  <td className="px-3 py-1.5">{t.tipoSolicitudDescripcion || ""}</td>
-                  <td className="px-3 py-1.5 max-w-xs"><TextoColapsable texto={t.descripcion} /></td>
-                  <td className="px-3 py-1.5">
+                  <td className="px-3 py-1.5 font-semibold text-blue-700 border-r border-gray-300">{t.id}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.pacienteNombre || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.pacienteDocumento || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.ingreso || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.pacienteEps || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.servicio || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.tipoSolicitudDescripcion || ""}</td>
+                  <td className="px-3 py-1.5 max-w-xs border-r border-gray-300"><TextoColapsable texto={t.descripcion} /></td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getEstadoBadge(t.estado)}`}>
                       {t.estado}
                     </span>
                   </td>
-                  <td className="px-3 py-1.5">{t.auxiliarReferencia || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{t.auxiliarReferencia || ""}</td>
                   <td className="px-3 py-1.5">
                     <button onClick={() => onEdit?.(t)} className="text-blue-600 hover:text-blue-800">
                       <FontAwesomeIcon icon={faPencilAlt} className="w-5 h-5" />

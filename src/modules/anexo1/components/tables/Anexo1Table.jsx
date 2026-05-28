@@ -110,19 +110,19 @@ export default function Anexo1Table() {
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0 z-10">
             <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Nombre</th>
-              <th className="px-4 py-3">Documento</th>
-              <th className="px-4 py-3">Ingreso</th>
-              <th className="px-4 py-3">EPS</th>
-              <th className="px-4 py-3">Servicio</th>
-              <th className="px-4 py-3">Tipo Solicitud</th>
-              <th className="px-4 py-3">Descripción</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3">Auxiliar</th>
-              <th className="px-4 py-3">Servicio Egreso</th>
-              <th className="px-4 py-3">Fecha Egreso</th>
+              <th className="px-4 py-3 border-r border-gray-300">ID</th>
+              <th className="px-4 py-3 border-r border-gray-300">Fecha</th>
+              <th className="px-4 py-3 border-r border-gray-300">Nombre</th>
+              <th className="px-4 py-3 border-r border-gray-300">Documento</th>
+              <th className="px-4 py-3 border-r border-gray-300">Ingreso</th>
+              <th className="px-4 py-3 border-r border-gray-300">EPS</th>
+              <th className="px-4 py-3 border-r border-gray-300">Servicio</th>
+              <th className="px-4 py-3 border-r border-gray-300">Tipo Solicitud</th>
+              <th className="px-4 py-3 border-r border-gray-300">Descripción</th>
+              <th className="px-4 py-3 border-r border-gray-300">Estado</th>
+              <th className="px-4 py-3 border-r border-gray-300">Auxiliar</th>
+              <th className="px-4 py-3 border-r border-gray-300">Servicio Egreso</th>
+              <th className="px-4 py-3 border-r border-gray-300">Fecha Egreso</th>
             </tr>
           </thead>
           <tbody>
@@ -131,22 +131,22 @@ export default function Anexo1Table() {
             )}
             {tramitesConDetalle.map((t, index) => (
               <tr key={t.id || index} className="bg-white border-b hover:bg-gray-50">
-                <td className="px-4 py-2 text-xs font-medium text-gray-900">{t.id}</td>
-                <td className="px-4 py-2 text-xs">{t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</td>
-                <td className="px-4 py-2 text-xs">{t.pacienteNombre || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.pacienteDocumento || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.ingreso || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.pacienteEps || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.servicio || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.tipoSolicitudDescripcion || ""}</td>
-                <td className="px-4 py-2 text-xs max-w-xs"><TextoColapsable texto={t.descripcion} /></td>
-                <td className="px-4 py-2 text-xs">
+                <td className="px-4 py-2 text-xs font-medium text-gray-900 border-r border-gray-300">{t.id}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.pacienteNombre || ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.pacienteDocumento || ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.ingreso || ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.pacienteEps || ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.servicio || ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.tipoSolicitudDescripcion || ""}</td>
+                <td className="px-4 py-2 text-xs max-w-xs border-r border-gray-300"><TextoColapsable texto={t.descripcion} /></td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoBadge(t.estado)}`}>
                     {t.estado}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-xs">{t.auxiliarReferencia || ""}</td>
-                <td className="px-4 py-2 text-xs">{t.egreso?.servicioEgreso || "-"}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.auxiliarReferencia || ""}</td>
+                <td className="px-4 py-2 text-xs border-r border-gray-300">{t.egreso?.servicioEgreso || "-"}</td>
                 <td className="px-4 py-2 text-xs">
                   {t.egreso?.fechaEgreso ? new Date(t.egreso.fechaEgreso).toLocaleDateString() : "-"}
                 </td>
@@ -166,16 +166,16 @@ export default function Anexo1Table() {
               <table className="w-full text-xs text-left">
                 <thead className="bg-gray-200">
                   <tr>
-                    <th className="px-3 py-2">Fecha</th>
-                    <th className="px-3 py-2">Autorizaci�n</th>
+                    <th className="px-3 py-2 border-r border-gray-300">Fecha</th>
+                    <th className="px-3 py-2 border-r border-gray-300">Autorización</th>
                     <th className="px-3 py-2">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
                   {seguimientosIntra.map((s, i) => (
                     <tr key={i} className="border-b">
-                      <td className="px-3 py-1">{new Date(s.fechaSeguimiento).toLocaleString()}</td>
-                      <td className="px-3 py-1">{s.autorizacion || s.numeroAutorizacion || "-"}</td>
+                      <td className="px-3 py-1 border-r border-gray-300">{new Date(s.fechaSeguimiento).toLocaleString()}</td>
+                      <td className="px-3 py-1 border-r border-gray-300">{s.autorizacion || s.numeroAutorizacion || "-"}</td>
                       <td className="px-3 py-1">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getEstadoAutoBadge(s.estadoAutorizacion)}`}>
                           {s.estadoAutorizacion}

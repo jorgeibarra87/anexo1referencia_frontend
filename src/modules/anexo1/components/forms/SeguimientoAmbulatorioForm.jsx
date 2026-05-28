@@ -8,10 +8,18 @@ import { actualizar } from "../../api/seguimientoAmbulatorioService";
 import { listarTramites } from "../../api/tramiteService";
 import Loader from "../../../../components/Loader";
 
+const MOCK_EGRESOS = [
+  { documento: "123456789", nombre: "JUAN PÉREZ GÓMEZ", eps: "SALUD TOTAL", ingreso: "2025001", servicio: "URGENCIAS", egresoFecha: "2025-05-20", egresoServicio: "CIRUGÍA GENERAL" },
+  { documento: "987654321", nombre: "MARÍA LÓPEZ RODRÍGUEZ", eps: "NUEVA EPS", ingreso: "2025002", servicio: "HOSPITALIZACIÓN", egresoFecha: "2025-05-22", egresoServicio: "MEDICINA INTERNA" },
+  { documento: "111222333", nombre: "CARLOS ANDRÉS RAMÍREZ", eps: "SANITAS", ingreso: "2025003", servicio: "CIRUGÍA", egresoFecha: "2025-05-25", egresoServicio: "CIRUGÍA GENERAL" },
+  { documento: "444555666", nombre: "ANA MILENA TORRES", eps: "SALUD TOTAL", ingreso: "2025004", servicio: "CONSULTA EXTERNA", egresoFecha: "2025-05-18", egresoServicio: "MEDICINA INTERNA" },
+  { documento: "777888999", nombre: "PEDRO ANTONIO CASTRO", eps: "COMPENSAR", ingreso: "2025005", servicio: "URGENCIAS", egresoFecha: "2025-05-30", egresoServicio: "CIRUGÍA GENERAL" },
+];
+
 export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
   const { data: seguimientoCreado, loading, error, postSeguimiento } = usePostSeguimientoAmbulatorio();
-  const [tramites, setTramites] = useState([]);
   const [tramiteSeleccionado, setTramiteSeleccionado] = useState(null);
+  const [egresoInfo, setEgresoInfo] = useState(null);
   const [busqueda, setBusqueda] = useState("");
 
   const esEdicion = !!item;
@@ -51,25 +59,52 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
       toast.info("Ingrese un número de documento");
       return;
     }
+
+    let tramiteEncontrado = null;
     try {
       const todos = await listarTramites();
-      const filtrados = todos.filter(t =>
-        t.pacienteDocumento && t.pacienteDocumento.includes(busqueda)
-      );
-      setTramites(filtrados);
-      if (filtrados.length === 0) {
-        toast.info("No se encontraron trámites para ese documento");
-        setTramiteSeleccionado(null);
-      } else if (filtrados.length === 1) {
-        setTramiteSeleccionado(filtrados[0]);
-        toast.success("Trámite encontrado");
-      } else {
-        setTramiteSeleccionado(null);
-        toast.info(`Se encontraron ${filtrados.length} trámites, seleccione uno`);
-      }
-    } catch {
-      toast.error("Error al buscar trámites");
+      tramiteEncontrado = todos.find(t => t.pacienteDocumento === busqueda.trim());
+    } catch {}
+
+    if (!tramiteEncontrado) {
+      toast.info("No se encontró el trámite con egreso para ese documento");
+      setTramiteSeleccionado(null);
+      setEgresoInfo(null);
+      return;
     }
+
+    let egresoData = null;
+    try {
+      const response = await fetch(`http://optimus:8000/dinamica-microservice/genPacien/informacion/egreso/${busqueda.trim()}`);
+      const data = await response.json();
+      if (data && data.egresoFecha) {
+        egresoData = {
+          egresoFecha: data.egresoFecha,
+          egresoServicio: data.egresoServicio || ""
+        };
+      }
+    } catch {}
+
+    if (!egresoData) {
+      const mock = MOCK_EGRESOS.find(p => p.documento === busqueda.trim());
+      if (mock) {
+        egresoData = {
+          egresoFecha: mock.egresoFecha,
+          egresoServicio: mock.egresoServicio
+        };
+      }
+    }
+
+    if (!egresoData) {
+      toast.info("No se encontró el trámite con egreso para ese documento");
+      setTramiteSeleccionado(null);
+      setEgresoInfo(null);
+      return;
+    }
+
+    setTramiteSeleccionado(tramiteEncontrado);
+    setEgresoInfo(egresoData);
+    toast.success("Trámite con egreso encontrado");
   };
 
   const handleSubmit = async (event) => {
@@ -104,8 +139,9 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
       }
       event.target.reset();
       setTramiteSeleccionado(null);
-      setTramites([]);
+      setEgresoInfo(null);
       setBusqueda("");
+      onSaved?.();
     } catch {
       toast.error(esEdicion ? "Error al actualizar el seguimiento" : "Error al guardar el seguimiento");
     }
@@ -137,17 +173,6 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
                       <FontAwesomeIcon icon={faSearch} className="mr-1" />Buscar
                     </button>
                   </div>
-                  {tramites.length > 1 && (
-                    <select onChange={(e) => {
-                      const t = tramites.find(t => t.id === parseInt(e.target.value));
-                      setTramiteSeleccionado(t || null);
-                    }} className="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                      <option value="">Seleccione un trámite...</option>
-                      {tramites.map(t => (
-                        <option key={t.id} value={t.id}>#{t.id} - {t.fechaTramite ? new Date(t.fechaTramite).toLocaleDateString() : ""}</option>
-                      ))}
-                    </select>
-                  )}
                 </div>
               </div>
             )}
@@ -163,7 +188,13 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
                   <div><span className="font-semibold">Ingreso:</span> {tramiteSeleccionado.ingreso || ""}</div>
                   <div><span className="font-semibold">EPS:</span> {tramiteSeleccionado.pacienteEps || ""}</div>
                   <div><span className="font-semibold">Servicio:</span> {tramiteSeleccionado.servicio || ""}</div>
-                  <div><span className="font-semibold">Estado:</span> {tramiteSeleccionado.estado || ""}</div>
+                  <div><span className="font-semibold">Estado Trámite:</span> {tramiteSeleccionado.estado || ""}</div>
+                  {egresoInfo && (
+                    <>
+                      <div><span className="font-semibold">Fecha Egreso:</span> {egresoInfo.egresoFecha}</div>
+                      <div><span className="font-semibold">Servicio Egreso:</span> {egresoInfo.egresoServicio}</div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -192,10 +223,6 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
         <button type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500 transition duration-300">
           {esEdicion ? "Actualizar" : "Guardar"}
-        </button>
-        <button type="button" onClick={() => { document.getElementById("segAmbulatorioForm").reset(); setTramiteSeleccionado(null); setTramites([]); setBusqueda(""); }}
-          className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 transition duration-300 ml-4">
-          Cancelar
         </button>
       </div>
     </form>

@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileEdit, faHospitalUser, faClipboardList, faFileMedical, faSearch, faSync, faHomeUser } from '@fortawesome/free-solid-svg-icons';
+import { faFileEdit, faHospitalUser, faClipboardList, faFileMedical, faSearch, faSync, faHomeUser, faChevronRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listarTramitesCompletos } from '../../api/tramiteService';
@@ -18,7 +18,17 @@ export default function Anexo1MainPage() {
   const [filtroSolicitud, setFiltroSolicitud] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [page, setPage] = useState(0);
+  const [expandedRows, setExpandedRows] = useState(new Set());
   const navigate = useNavigate();
+
+  const toggleExpand = (id) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -96,11 +106,13 @@ export default function Anexo1MainPage() {
   if (error) return <p className="text-red-600">Error: {error.message || "Error"}</p>;
 
   const sectionColspan = {
+    expand: 1,
     inicio: 11,
     intra: 3,
     salida: 2,
     amb: 2,
   };
+  const totalCols = sectionColspan.expand + sectionColspan.inicio + sectionColspan.intra + sectionColspan.salida + sectionColspan.amb;
 
   return (
     <div className="min-h-screen bg-white p-2">
@@ -164,61 +176,106 @@ export default function Anexo1MainPage() {
           <table className="min-w-full text-xs text-gray-700 border-collapse">
             <thead>
               <tr className="bg-gray-900 text-white text-center text-sm font-bold">
+                <th rowSpan={2} className="px-1 py-2 w-6"></th>
                 <th colSpan={sectionColspan.inicio} className="px-2 py-2 border-r border-gray-700">INICIO TRÁMITE</th>
                 <th colSpan={sectionColspan.intra} className="px-2 py-2 border-r border-gray-700">SEGUIMIENTO INTRAHOSPITALARIO</th>
                 <th colSpan={sectionColspan.salida} className="px-2 py-2 border-r border-gray-700">SALIDA</th>
                 <th colSpan={sectionColspan.amb} className="px-2 py-2">SEGUIMIENTO AMBULATORIO</th>
               </tr>
               <tr className="bg-gray-800 text-white text-xs">
-                <th className="px-2 py-1.5 text-left">ID</th>
-                <th className="px-2 py-1.5 text-left">Fecha</th>
-                <th className="px-2 py-1.5 text-left">Nombre</th>
-                <th className="px-2 py-1.5 text-left">Documento</th>
-                <th className="px-2 py-1.5 text-left">Ingreso</th>
-                <th className="px-2 py-1.5 text-left">EPS</th>
-                <th className="px-2 py-1.5 text-left">Servicio</th>
-                <th className="px-2 py-1.5 text-left">Solicitud</th>
-                <th className="px-2 py-1.5 text-left">Descripción</th>
-                <th className="px-2 py-1.5 text-left">Estado</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">ID</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Fecha</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Nombre</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Documento</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Ingreso</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">EPS</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Servicio</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Solicitud</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Descripción</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Estado</th>
                 <th className="px-2 py-1.5 text-left border-r border-gray-700">Aux. Tramite</th>
-                <th className="px-2 py-1.5 text-left">Fecha Seg.</th>
-                <th className="px-2 py-1.5 text-left">Autorización</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Fecha Seg.</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Autorización</th>
                 <th className="px-2 py-1.5 text-left border-r border-gray-700">Aux. Seguimiento</th>
-                <th className="px-2 py-1.5 text-left">Servicio Egreso</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Servicio Egreso</th>
                 <th className="px-2 py-1.5 text-left border-r border-gray-700">Fecha Egreso</th>
-                <th className="px-2 py-1.5 text-left">Nota Seguimiento</th>
+                <th className="px-2 py-1.5 text-left border-r border-gray-300">Nota Seguimiento</th>
                 <th className="px-2 py-1.5 text-left">Fecha Nota</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((t, i) => (
-                <tr key={t.id || i} className="border-b hover:bg-blue-50">
-                  <td className="px-2 py-1 font-semibold text-blue-700">{t.id}</td>
-                  <td className="px-2 py-1">{fmtDate(t.fechaTramite)}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{t.pacienteNombre || ""}</td>
-                  <td className="px-2 py-1 whitespace-nowrap">{t.pacienteDocumento || ""}</td>
-                  <td className="px-2 py-1">{t.ingreso || ""}</td>
-                  <td className="px-2 py-1">{t.pacienteEps || ""}</td>
-                  <td className="px-2 py-1">{t.servicio || ""}</td>
-                  <td className="px-2 py-1 max-w-[150px]"><TextoColapsable texto={t.tipoSolicitudDescripcion} limite={60} /></td>
-                  <td className="px-2 py-1 max-w-[200px]"><TextoColapsable texto={t.descripcion} /></td>
-                  <td className="px-2 py-1">
-                    <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${getEstadoBadge(t.estado)}`}>
-                      {t.estado}
-                    </span>
-                  </td>
-                  <td className="px-2 py-1 border-r border-gray-300">{t.auxiliarReferencia || ""}</td>
-                  <td className="px-2 py-1">{fmtDate(t.intraFechaSeguimiento)}</td>
-                  <td className="px-2 py-1 max-w-[150px]"><TextoColapsable texto={t.intraAutorizacion} limite={60} /></td>
-                  <td className="px-2 py-1 border-r border-gray-300">{t.intraAuxiliarReferencia || ""}</td>
-                  <td className="px-2 py-1">{t.egresoServicio || ""}</td>
-                  <td className="px-2 py-1 border-r border-gray-300">{fmtDate(t.egresoFecha)}</td>
-                  <td className="px-2 py-1 max-w-[200px]"><TextoColapsable texto={t.ambulatorioNotaSeguimiento} /></td>
-                  <td className="px-2 py-1">{fmtDate(t.ambulatorioFechaNota)}</td>
-                </tr>
-              ))}
+              {paginatedData.map((t, i) => {
+                const intraList = t.intraSeguimientos || [];
+                const hayMultiples = intraList.length > 1;
+                const expandida = expandedRows.has(t.id);
+                return (
+                  <tr key={t.id || i} className="border-b hover:bg-blue-50">
+                    <td className="px-1 py-1 text-center">
+                      {hayMultiples && (
+                        <button onClick={() => toggleExpand(t.id)} className="text-gray-500 hover:text-gray-700">
+                          <FontAwesomeIcon icon={expandida ? faChevronDown : faChevronRight} />
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-2 py-1 font-semibold text-blue-700 border-r border-gray-300">{t.id}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{fmtDate(t.fechaTramite)}</td>
+                    <td className="px-2 py-1 whitespace-nowrap border-r border-gray-300">{t.pacienteNombre || ""}</td>
+                    <td className="px-2 py-1 whitespace-nowrap border-r border-gray-300">{t.pacienteDocumento || ""}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{t.ingreso || ""}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{t.pacienteEps || ""}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{t.servicio || ""}</td>
+                    <td className="px-2 py-1 max-w-[150px] border-r border-gray-300"><TextoColapsable texto={t.tipoSolicitudDescripcion} limite={60} /></td>
+                    <td className="px-2 py-1 max-w-[200px] border-r border-gray-300"><TextoColapsable texto={t.descripcion} /></td>
+                    <td className="px-2 py-1 border-r border-gray-300">
+                      <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${getEstadoBadge(t.estado)}`}>
+                        {t.estado}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1 border-r border-gray-300">{t.auxiliarReferencia || ""}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{fmtDate(t.intraFechaSeguimiento)}</td>
+                    <td className="px-2 py-1 max-w-[150px] border-r border-gray-300"><TextoColapsable texto={t.intraAutorizacion} limite={60} /></td>
+                    <td className="px-2 py-1 border-r border-gray-300">{t.intraAuxiliarReferencia || ""}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{t.egresoServicio || ""}</td>
+                    <td className="px-2 py-1 border-r border-gray-300">{fmtDate(t.egresoFecha)}</td>
+                    <td className="px-2 py-1 max-w-[200px] border-r border-gray-300"><TextoColapsable texto={t.ambulatorioNotaSeguimiento} /></td>
+                    <td className="px-2 py-1">{fmtDate(t.ambulatorioFechaNota)}</td>
+                  </tr>
+                );
+              })}
+              {paginatedData.map((t, i) => {
+                const intraList = t.intraSeguimientos || [];
+                const expandida = expandedRows.has(t.id);
+                if (!expandida || intraList.length <= 1) return null;
+                return (
+                  <tr key={`exp-${t.id}`} className="bg-gray-50">
+                    <td colSpan={totalCols} className="px-4 py-3">
+                      <div className="text-xs font-semibold text-gray-600 mb-2">Todos los seguimientos intrahospitalarios del trámite #{t.id}:</div>
+                      <table className="min-w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-gray-200 text-gray-700">
+                            <th className="px-2 py-1 text-left border-r border-gray-300">#</th>
+                            <th className="px-2 py-1 text-left border-r border-gray-300">Fecha Seguimiento</th>
+                            <th className="px-2 py-1 text-left border-r border-gray-300">Autorización</th>
+                            <th className="px-2 py-1 text-left">Auxiliar</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {intraList.map((s, idx) => (
+                            <tr key={idx} className="border-b border-gray-200">
+                              <td className="px-2 py-1 font-semibold text-blue-600 border-r border-gray-300">{idx + 1}</td>
+                              <td className="px-2 py-1 border-r border-gray-300">{s.fechaSeguimiento ? new Date(s.fechaSeguimiento).toLocaleString() : ""}</td>
+                              <td className="px-2 py-1 max-w-[200px] border-r border-gray-300"><TextoColapsable texto={s.autorizacion} limite={80} /></td>
+                              <td className="px-2 py-1">{s.auxiliarReferencia || ""}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                );
+              })}
               {datosFiltrados.length === 0 && (
-                <tr><td colSpan={18} className="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>
+                <tr><td colSpan={totalCols} className="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>
               )}
             </tbody>
           </table>
