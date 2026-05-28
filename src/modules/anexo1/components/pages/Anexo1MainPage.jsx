@@ -15,6 +15,8 @@ export default function Anexo1MainPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  const [filtroSolicitud, setFiltroSolicitud] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
   const [page, setPage] = useState(0);
   const navigate = useNavigate();
 
@@ -33,15 +35,20 @@ export default function Anexo1MainPage() {
 
   useEffect(() => { fetchData(); }, []);
 
+  const opcionesSolicitud = [...new Set(data.map(t => t.tipoSolicitudDescripcion).filter(Boolean))].sort();
+  const opcionesEstado = ["CERRADO", "PENDIENTE"];
+
   const datosFiltrados = data.filter((t) => {
+    if (filtroSolicitud && t.tipoSolicitudDescripcion !== filtroSolicitud) return false;
+    if (filtroEstado && t.estado !== filtroEstado) return false;
     if (!busqueda.trim()) return true;
     const q = busqueda.toLowerCase();
     return (
       String(t.id).includes(q) ||
       (t.pacienteNombre || '').toLowerCase().includes(q) ||
       (t.pacienteDocumento || '').toLowerCase().includes(q) ||
-      (t.servicio || '').toLowerCase().includes(q) ||
-      (t.tipoSolicitudDescripcion || '').toLowerCase().includes(q)
+      (t.ingreso || '').toLowerCase().includes(q) ||
+      (t.servicio || '').toLowerCase().includes(q)
     );
   });
 
@@ -51,9 +58,7 @@ export default function Anexo1MainPage() {
   const getEstadoBadge = (estado) => {
     const colores = {
       PENDIENTE: "bg-yellow-300 text-yellow-900",
-      EN_PROCESO: "bg-blue-300 text-blue-900",
       CERRADO: "bg-green-400 text-green-900",
-      ANULADO: "bg-red-300 text-red-900",
     };
     return colores[estado] || "bg-gray-200 text-gray-800";
   };
@@ -131,16 +136,26 @@ export default function Anexo1MainPage() {
         </button>
       </div>
 
-      <div className="flex items-center space-x-2 mb-4 min-w-full">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <span className="font-medium text-xs"><FontAwesomeIcon icon={faSearch} /> Buscar:</span>
         <input type="text" value={busqueda}
           onChange={(e) => { setBusqueda(e.target.value); setPage(0); }}
-          placeholder="ID, paciente, documento, servicio o solicitud"
-          className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-72" />
+          placeholder="Nombre, documento, ingreso, servicio"
+          className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-56" />
         {busqueda && (
           <button onClick={() => { setBusqueda(''); setPage(0); }}
             className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs">✕ Limpiar</button>
         )}
+        <select value={filtroSolicitud} onChange={(e) => { setFiltroSolicitud(e.target.value); setPage(0); }}
+          className="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
+          <option value="">Todas las solicitudes</option>
+          {opcionesSolicitud.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPage(0); }}
+          className="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
+          <option value="">Todos los estados</option>
+          {opcionesEstado.map(e => <option key={e} value={e}>{e}</option>)}
+        </select>
       </div>
 
       <div className="relative mb-4 border border-gray-300 rounded-lg shadow-md bg-white flex flex-col"

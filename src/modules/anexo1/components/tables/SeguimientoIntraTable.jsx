@@ -14,7 +14,8 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
   const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [page, setPage] = useState(0);
-  const [tramiteFilter, setTramiteFilter] = useState('');
+  const [filtroSolicitud, setFiltroSolicitud] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -26,7 +27,15 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
       for (const t of tramitesData) {
         try {
           const items = await listarTodosIntra(t.id);
-          all = all.concat(items.map((item) => ({ ...item, tramiteId: t.id, pacienteNombre: t.pacienteNombre, pacienteDocumento: t.pacienteDocumento })));
+          all = all.concat(items.map((item) => ({
+            ...item,
+            tramiteId: t.id,
+            pacienteNombre: t.pacienteNombre,
+            pacienteDocumento: t.pacienteDocumento,
+            servicio: t.servicio,
+            estado: t.estado,
+            tipoSolicitudDescripcion: t.tipoSolicitudDescripcion
+          })));
         } catch {}
       }
       setData(all);
@@ -39,14 +48,19 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
 
   useEffect(() => { loadData(); }, [reloadFlag]);
 
+  const opcionesSolicitud = [...new Set(tramites.map(t => t.tipoSolicitudDescripcion).filter(Boolean))].sort();
+  const opcionesEstado = ["CERRADO", "PENDIENTE"];
+
   const dataFiltrada = data.filter((item) => {
-    if (tramiteFilter && item.tramiteId !== parseInt(tramiteFilter)) return false;
+    if (filtroSolicitud && item.tipoSolicitudDescripcion !== filtroSolicitud) return false;
+    if (filtroEstado && item.estado !== filtroEstado) return false;
     if (!busqueda.trim()) return true;
     const q = busqueda.toLowerCase();
     return (
       String(item.tramiteId).includes(q) ||
-      item.pacienteNombre?.toLowerCase().includes(q) ||
-      item.numeroAutorizacion?.toLowerCase().includes(q)
+      (item.pacienteNombre || '').toLowerCase().includes(q) ||
+      (item.pacienteDocumento || '').toLowerCase().includes(q) ||
+      (item.servicio || '').toLowerCase().includes(q)
     );
   });
 
@@ -54,8 +68,7 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
   const paginatedData = dataFiltrada.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const getEstadoBadge = (estado) => {
-    if (estado === "AUTORIZADO" || estado === "CERRADO") return "bg-green-400 text-green-900";
-    if (estado === "NEGADO") return "bg-red-300 text-red-900";
+    if (estado === "CERRADO") return "bg-green-400 text-green-900";
     return "bg-yellow-300 text-yellow-900";
   };
 
@@ -63,19 +76,22 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
 
   return (
     <div className="bg-white shadow-md rounded-lg p-2 w-full">
-      <div className="flex items-center space-x-2 mb-2 text-xs text-gray-600">
+      <div className="flex items-center gap-2 mb-2 text-xs text-gray-600 flex-wrap">
         <span className="font-medium"><FontAwesomeIcon icon={faSearch} className="w-4 h-4" /> Buscar:</span>
         <input type="text" value={busqueda}
           onChange={(e) => { setBusqueda(e.target.value); setPage(0); }}
-          placeholder="ID trámite o paciente"
+          placeholder="ID, paciente, documento o servicio"
           className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-48"
         />
-        <select value={tramiteFilter} onChange={(e) => { setTramiteFilter(e.target.value); setPage(0); }}
-          className="border border-gray-300 rounded px-2 py-1 text-xs">
-          <option value="">Todos los trámites</option>
-          {tramites.map((t) => (
-            <option key={t.id} value={t.id}>#{t.id} - {t.pacienteNombre}</option>
-          ))}
+        <select value={filtroSolicitud} onChange={(e) => { setFiltroSolicitud(e.target.value); setPage(0); }}
+          className="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
+          <option value="">Todas las solicitudes</option>
+          {opcionesSolicitud.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPage(0); }}
+          className="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
+          <option value="">Todos los estados</option>
+          {opcionesEstado.map(e => <option key={e} value={e}>{e}</option>)}
         </select>
       </div>
 
@@ -88,9 +104,10 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
                 <th className="px-3 py-2 text-left">ID Trámite</th>
                 <th className="px-3 py-2 text-left">Paciente</th>
                 <th className="px-3 py-2 text-left">Documento</th>
+                <th className="px-3 py-2 text-left">Servicio</th>
                 <th className="px-3 py-2 text-left">Fecha Seguimiento</th>
                 <th className="px-3 py-2 text-left">Autorización</th>
-                <th className="px-3 py-2 text-left">Estado</th>
+                <th className="px-3 py-2 text-left">Estado Trámite</th>
                 <th className="px-3 py-2 text-left">Auxiliar</th>
                 <th className="px-3 py-2 text-left">Acciones</th>
               </tr>
@@ -101,11 +118,12 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
                   <td className="px-3 py-1.5 font-semibold text-blue-700">{item.tramiteId}</td>
                   <td className="px-3 py-1.5">{item.pacienteNombre || ""}</td>
                   <td className="px-3 py-1.5">{item.pacienteDocumento || ""}</td>
+                  <td className="px-3 py-1.5">{item.servicio || ""}</td>
                   <td className="px-3 py-1.5">{item.fechaSeguimiento ? new Date(item.fechaSeguimiento).toLocaleString() : ""}</td>
                   <td className="px-3 py-1.5 max-w-xs"><TextoColapsable texto={item.autorizacion || item.numeroAutorizacion} /></td>
                   <td className="px-3 py-1.5">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getEstadoBadge(item.estadoAutorizacion)}`}>
-                      {item.estadoAutorizacion}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getEstadoBadge(item.estado)}`}>
+                      {item.estado}
                     </span>
                   </td>
                   <td className="px-3 py-1.5">{item.auxiliarReferencia || ""}</td>
@@ -117,7 +135,7 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
                 </tr>
               ))}
               {data.length === 0 && (
-                <tr><td colSpan={8} className="text-center py-4 text-gray-500">No hay seguimientos registrados.</td></tr>
+                <tr><td colSpan={9} className="text-center py-4 text-gray-500">No hay seguimientos registrados.</td></tr>
               )}
             </tbody>
           </table>

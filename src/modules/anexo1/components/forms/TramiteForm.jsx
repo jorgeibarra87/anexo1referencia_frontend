@@ -99,7 +99,9 @@ export default function TramiteForm({ tramite, onSaved }) {
     }
     let pacData = null;
     try {
-      const response = await fetch(`http://localhost:8081/api/dinamica/genpacien/${busqueda}`);
+      
+      const response = await fetch(`http://optimus:8000/dinamica-microservice/genPacien/informacion/egreso/${busqueda}`);
+      //const response = await fetch(`http://localhost:8081/api/dinamica/genpacien/${busqueda}`);
       const data = await response.json();
       if (data && data.pacNumDoc) {
         pacData = {
@@ -150,7 +152,7 @@ export default function TramiteForm({ tramite, onSaved }) {
       servicio: esEdicion ? data.servicio : (infoPaciente?.servicio || data.servicio || null),
       tipoSolicitudId: data.tipoSolicitudId ? parseInt(data.tipoSolicitudId) : null,
       descripcion: data.descripcion,
-      estado: data.estado || "PENDIENTE",
+      estado: "PENDIENTE",
       auxiliarReferencia: tramite?.auxiliarReferencia || nombreUsuario
     };
 
@@ -183,11 +185,15 @@ export default function TramiteForm({ tramite, onSaved }) {
           <div className="p-6">
             <div className="flex flex-wrap -mx-3 mb-6">
               <div className="w-full md:w-1/3 px-3 mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">ID Trámite:</label>
-                <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                  value={tramite?.id || ""} disabled />
+                {esEdicion && (
+                  <>
+                    <label className="block text-gray-700 text-sm font-bold mb-2">ID Trámite:</label>
+                    <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                      value={tramite?.id || ""} disabled />
+                  </>
+                )}
 
-                <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Fecha Trámite:</label>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Fecha Trámite:</label>
                 <input className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                   value={tramite?.fechaTramite ? new Date(tramite.fechaTramite).toLocaleString() : new Date().toLocaleString()} disabled />
               </div>
@@ -228,18 +234,17 @@ export default function TramiteForm({ tramite, onSaved }) {
                     <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">N° Ingreso:</label>
                     <input name="ingreso" className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                       value={infoPaciente.ingreso || ""} readOnly />
+
+                    <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Servicio:</label>
+                    <input name="servicio" defaultValue={infoPaciente.servicio || ""}
+                      className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" readOnly />
                   </>
                 )}
-
-                <label className="block text-gray-700 text-sm font-bold mt-4 mb-2">Servicio:</label>
-                <input name="servicio" defaultValue={tramite?.servicio || infoPaciente?.servicio || ""}
-                  disabled={!esEdicion}
-                  className={`border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 ${!esEdicion ? "bg-gray-100" : "bg-gray-50 focus:ring-blue-500 focus:border-blue-500"}`} />
               </div>
             </div>
 
             <div className="flex flex-wrap -mx-3 mb-6">
-              <div className="w-full md:w-1/2 px-3 mb-6">
+              <div className="w-full px-3 mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Tipo de Solicitud:</label>
                 <select name="tipoSolicitudId" defaultValue={tramite?.tipoSolicitudId || ""}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -247,18 +252,6 @@ export default function TramiteForm({ tramite, onSaved }) {
                   {tiposSolicitud.map((ts) => (
                     <option key={ts.id} value={ts.id}>{ts.descripcion}</option>
                   ))}
-                </select>
-              </div>
-
-              <div className="w-full md:w-1/2 px-3 mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Estado:</label>
-                <select name="estado" defaultValue={tramite?.estado || "PENDIENTE"}
-                  disabled={!esEdicion}
-                  className={`border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 ${!esEdicion ? "bg-gray-100" : "bg-gray-50 focus:ring-blue-500 focus:border-blue-500"}`}>
-                  <option value="PENDIENTE">PENDIENTE</option>
-                  <option value="EN_PROCESO">EN PROCESO</option>
-                  <option value="CERRADO">CERRADO</option>
-                  <option value="ANULADO">ANULADO</option>
                 </select>
               </div>
             </div>
@@ -286,10 +279,6 @@ export default function TramiteForm({ tramite, onSaved }) {
         <button type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500 transition duration-300">
           {esEdicion ? "Actualizar" : "Guardar"}
-        </button>
-        <button type="button" onClick={() => { document.getElementById("tramiteForm").reset(); setInfoPaciente(null); setBusqueda(""); }}
-          className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 transition duration-300 ml-4">
-          Cancelar
         </button>
       </div>
     </form>

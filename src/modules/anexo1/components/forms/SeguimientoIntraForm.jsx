@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import usePostSeguimientoIntra from "../../hooks/usePostSeguimientoIntra";
 import { actualizar } from "../../api/seguimientoIntrahospitalarioService";
-import { listarTramites } from "../../api/tramiteService";
+import { listarTramites, cambiarEstadoTramite } from "../../api/tramiteService";
 import Loader from "../../../../components/Loader";
 
 export default function SeguimientoIntraForm({ item, onSaved }) {
@@ -13,6 +13,7 @@ export default function SeguimientoIntraForm({ item, onSaved }) {
   const [tramites, setTramites] = useState([]);
   const [tramiteSeleccionado, setTramiteSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState("");
+  const [tramiteEstado, setTramiteEstado] = useState("");
 
   const esEdicion = !!item;
   const token = localStorage.getItem("tokenhusjp");
@@ -25,6 +26,10 @@ export default function SeguimientoIntraForm({ item, onSaved }) {
   }
 
   const fechaActual = new Date().toISOString().slice(0, 16);
+
+  useEffect(() => {
+    if (tramiteSeleccionado) setTramiteEstado(tramiteSeleccionado.estado || "");
+  }, [tramiteSeleccionado]);
 
   useEffect(() => {
     if (!seguimientoCreado) return;
@@ -99,10 +104,15 @@ export default function SeguimientoIntraForm({ item, onSaved }) {
       } else {
         await postSeguimiento(payload);
       }
+      if (tramiteId && tramiteEstado) {
+        await cambiarEstadoTramite(tramiteId, tramiteEstado);
+      }
       event.target.reset();
       setTramiteSeleccionado(null);
       setTramites([]);
       setBusqueda("");
+      setTramiteEstado("");
+      onSaved?.();
     } catch {
       toast.error(esEdicion ? "Error al actualizar el seguimiento" : "Error al guardar el seguimiento");
     }
@@ -160,7 +170,13 @@ export default function SeguimientoIntraForm({ item, onSaved }) {
                   <div><span className="font-semibold">Ingreso:</span> {tramiteSeleccionado.ingreso || ""}</div>
                   <div><span className="font-semibold">EPS:</span> {tramiteSeleccionado.pacienteEps || ""}</div>
                   <div><span className="font-semibold">Servicio:</span> {tramiteSeleccionado.servicio || ""}</div>
-                  <div><span className="font-semibold">Estado:</span> {tramiteSeleccionado.estado || ""}</div>
+                  <div><span className="font-semibold">Estado Trámite:</span>
+                    <select disabled={!esEdicion} value={tramiteEstado} onChange={(e) => setTramiteEstado(e.target.value)}
+                      className="ml-2 border border-gray-300 rounded px-2 py-0.5 text-xs bg-white">
+                      <option value="PENDIENTE">PENDIENTE</option>
+                      <option value="CERRADO">CERRADO</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
@@ -183,17 +199,15 @@ export default function SeguimientoIntraForm({ item, onSaved }) {
             </div>
 
             <div className="flex flex-wrap -mx-3 mb-6">
-              <div className="w-full md:w-1/3 px-3 mb-6">
+              {/* <div className="w-full md:w-1/3 px-3 mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Estado Autorización:</label>
                 <select name="estadoAutorizacion" defaultValue={item?.estadoAutorizacion || "PENDIENTE"}
                   disabled={!esEdicion}
                   className={`border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 ${!esEdicion ? "bg-gray-100" : "bg-gray-50 focus:ring-blue-500 focus:border-blue-500"}`}>
                   <option value="PENDIENTE">PENDIENTE</option>
-                  <option value="AUTORIZADO">AUTORIZADO</option>
-                  <option value="NEGADO">NEGADO</option>
-                  <option value="EN_TRAMITE">EN TRÁMITE</option>
+                  <option value="AUTORIZADO">CERRADO</option>
                 </select>
-              </div>
+              </div> */}
 
               <div className="w-full md:w-1/3 px-3 mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Aux. Referencia:</label>
@@ -209,10 +223,6 @@ export default function SeguimientoIntraForm({ item, onSaved }) {
         <button type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500 transition duration-300">
           {esEdicion ? "Actualizar" : "Guardar"}
-        </button>
-        <button type="button" onClick={() => { document.getElementById("segIntraForm").reset(); setTramiteSeleccionado(null); setTramites([]); setBusqueda(""); }}
-          className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 transition duration-300 ml-4">
-          Cancelar
         </button>
       </div>
     </form>
