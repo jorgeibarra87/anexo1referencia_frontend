@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import usePostSeguimientoAmbulatorio from "../../hooks/usePostSeguimientoAmbulatorio";
 import { actualizar } from "../../api/seguimientoAmbulatorioService";
 import { listarTramites } from "../../api/tramiteService";
+import { crear as crearEgreso, actualizar as actualizarEgreso, obtenerPorTramiteId as obtenerEgreso } from "../../api/egresoService";
 import Loader from "../../../../components/Loader";
 
 const MOCK_EGRESOS = [
@@ -136,6 +137,28 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
         await actualizar(item.id, payload);
       } else {
         await postSeguimiento(payload);
+      }
+      if (egresoInfo) {
+        const fechaEgreso = egresoInfo.egresoFecha
+          ? egresoInfo.egresoFecha.includes("T")
+            ? egresoInfo.egresoFecha
+            : `${egresoInfo.egresoFecha}T00:00:00`
+          : null;
+        const egresoPayload = {
+          tramiteId,
+          servicioEgreso: egresoInfo.egresoServicio,
+          fechaEgreso
+        };
+        try {
+          const existente = await obtenerEgreso(tramiteId);
+          if (existente && existente.id) {
+            await actualizarEgreso(existente.id, egresoPayload);
+          } else {
+            await crearEgreso(egresoPayload);
+          }
+        } catch {
+          await crearEgreso(egresoPayload);
+        }
       }
       event.target.reset();
       setTramiteSeleccionado(null);

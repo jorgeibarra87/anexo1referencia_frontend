@@ -22,7 +22,6 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
     try {
       const tramitesData = await listarTramites();
       setTramites(tramitesData);
-
       let all = [];
       for (const t of tramitesData) {
         try {
@@ -32,6 +31,7 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
             tramiteId: t.id,
             pacienteNombre: t.pacienteNombre,
             pacienteDocumento: t.pacienteDocumento,
+            ingreso: t.ingreso,
             servicio: t.servicio,
             estado: t.estado,
             tipoSolicitudDescripcion: t.tipoSolicitudDescripcion
@@ -50,7 +50,6 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
 
   const opcionesSolicitud = [...new Set(tramites.map(t => t.tipoSolicitudDescripcion).filter(Boolean))].sort();
   const opcionesEstado = ["CERRADO", "PENDIENTE"];
-
   const dataFiltrada = data.filter((item) => {
     if (filtroSolicitud && item.tipoSolicitudDescripcion !== filtroSolicitud) return false;
     if (filtroEstado && item.estado !== filtroEstado) return false;
@@ -104,6 +103,7 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
                 <th className="px-3 py-2 text-left border-r border-gray-300">ID Trámite</th>
                 <th className="px-3 py-2 text-left border-r border-gray-300">Paciente</th>
                 <th className="px-3 py-2 text-left border-r border-gray-300">Documento</th>
+                <th className="px-3 py-2 text-left border-r border-gray-300">Ingreso</th>
                 <th className="px-3 py-2 text-left border-r border-gray-300">Servicio</th>
                 <th className="px-3 py-2 text-left border-r border-gray-300">Fecha Seguimiento</th>
                 <th className="px-3 py-2 text-left border-r border-gray-300">Autorización</th>
@@ -118,6 +118,7 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
                   <td className="px-3 py-1.5 font-semibold text-blue-700 border-r border-gray-300">{item.tramiteId}</td>
                   <td className="px-3 py-1.5 border-r border-gray-300">{item.pacienteNombre || ""}</td>
                   <td className="px-3 py-1.5 border-r border-gray-300">{item.pacienteDocumento || ""}</td>
+                  <td className="px-3 py-1.5 border-r border-gray-300">{item.ingreso || ""}</td>
                   <td className="px-3 py-1.5 border-r border-gray-300">{item.servicio || ""}</td>
                   <td className="px-3 py-1.5 border-r border-gray-300">{item.fechaSeguimiento ? new Date(item.fechaSeguimiento).toLocaleString() : ""}</td>
                   <td className="px-3 py-1.5 max-w-xs border-r border-gray-300"><TextoColapsable texto={item.autorizacion || item.numeroAutorizacion} /></td>
