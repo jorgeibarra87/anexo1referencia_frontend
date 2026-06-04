@@ -12,6 +12,8 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
   const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [page, setPage] = useState(0);
+  const [filtroSolicitud, setFiltroSolicitud] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -27,7 +29,11 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
 
   useEffect(() => { loadData(); }, [reloadFlag]);
 
+  const opcionesSolicitud = [...new Set(data.map(t => t.tipoSolicitudDescripcion).filter(Boolean))].sort();
+  const opcionesEstado = ["CERRADO", "PENDIENTE"];
   const dataFiltrada = data.filter((t) => {
+    if (filtroSolicitud && t.tipoSolicitudDescripcion !== filtroSolicitud) return false;
+    if (filtroEstado && t.estado !== filtroEstado) return false;
     if (!busqueda.trim()) return true;
     const q = busqueda.toLowerCase();
     return (
@@ -65,6 +71,16 @@ export default function TramiteTable({ onEdit = () => {}, reloadFlag }) {
           <button onClick={() => { setBusqueda(''); setPage(0); }}
             className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs">✕ Limpiar</button>
         )}
+        <select value={filtroSolicitud} onChange={(e) => { setFiltroSolicitud(e.target.value); setPage(0); }}
+          className="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
+          <option value="">Todas las solicitudes</option>
+          {opcionesSolicitud.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPage(0); }}
+          className="border border-gray-300 rounded px-2 py-1 text-xs bg-white">
+          <option value="">Todos los estados</option>
+          {opcionesEstado.map(e => <option key={e} value={e}>{e}</option>)}
+        </select>
       </div>
 
       <div className="relative mb-4 border border-gray-300 rounded-lg shadow-md bg-white flex flex-col"
