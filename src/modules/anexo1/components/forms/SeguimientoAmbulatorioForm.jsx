@@ -41,7 +41,7 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
 
   useEffect(() => {
     if (!error) return;
-    toast.error(esEdicion ? "Error al actualizar el seguimiento" : "Error al guardar el seguimiento");
+    toast.error(esEdicion ? "No se pudo actualizar el seguimiento" : "No se pudo guardar el seguimiento");
   }, [error]);
 
   useEffect(() => {
@@ -165,8 +165,13 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
       setEgresoInfo(null);
       setBusqueda("");
       onSaved?.();
-    } catch {
-      toast.error(esEdicion ? "Error al actualizar el seguimiento" : "Error al guardar el seguimiento");
+    } catch (err) {
+      const mensajeError = err.response?.data ?? "";
+      if (mensajeError.includes("Ya existe")) {
+        toast.error("Ya existe un seguimiento ambulatorio para este trámite");
+      } else {
+        toast.error(esEdicion ? "No se pudo actualizar el seguimiento" : "No se pudo guardar el seguimiento");
+      }
     }
   };
 
