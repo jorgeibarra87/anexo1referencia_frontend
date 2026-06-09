@@ -55,20 +55,20 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
     })();
   }, []);
 
-  const handleBuscarDocumento = async () => {
+  const handleBuscarIngreso = async () => {
     if (!busqueda.trim()) {
-      toast.info("Ingrese un número de documento");
+      toast.info("Ingrese un número de ingreso");
       return;
     }
 
     let tramiteEncontrado = null;
     try {
       const todos = await listarTramites();
-      tramiteEncontrado = todos.find(t => t.pacienteDocumento === busqueda.trim());
+      tramiteEncontrado = todos.find(t => t.ingreso === busqueda.trim());
     } catch {}
 
     if (!tramiteEncontrado) {
-      toast.info("No se encontró el trámite con egreso para ese documento");
+      toast.info("No se encontró el trámite con egreso para ese ingreso");
       setTramiteSeleccionado(null);
       setEgresoInfo(null);
       return;
@@ -87,7 +87,7 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
     } catch {}
 
     if (!egresoData) {
-      const mock = MOCK_EGRESOS.find(p => p.documento === busqueda.trim());
+      const mock = MOCK_EGRESOS.find(p => p.ingreso === busqueda.trim());
       if (mock) {
         egresoData = {
           egresoFecha: mock.egresoFecha,
@@ -97,7 +97,7 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
     }
 
     if (!egresoData) {
-      toast.info("No se encontró el trámite con egreso para ese documento");
+      toast.info("No se encontró el trámite con egreso para ese ingreso");
       setTramiteSeleccionado(null);
       setEgresoInfo(null);
       return;
@@ -186,12 +186,12 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
             {!esEdicion && (
               <div className="flex flex-wrap -mx-3 mb-6">
                 <div className="w-full md:w-1/2 px-3">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">Buscar por Documento:</label>
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Buscar por Ingreso:</label>
                   <div className="flex items-center">
                     <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      placeholder="N° documento del paciente" />
-                    <button type="button" onClick={handleBuscarDocumento}
+                      placeholder="N° de ingreso del paciente" />
+                    <button type="button" onClick={handleBuscarIngreso}
                       className="ml-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
                       <FontAwesomeIcon icon={faSearch} className="mr-1" />Buscar
                     </button>
