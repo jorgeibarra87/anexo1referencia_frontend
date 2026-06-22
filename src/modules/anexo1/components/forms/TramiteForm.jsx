@@ -7,6 +7,7 @@ import usePostTramite from "../../hooks/usePostTramite";
 import useFetchTipoSolicitudCatalogo from "../../hooks/useFetchTipoSolicitudCatalogo";
 import { actualizarTramite } from "../../api/tramiteService";
 import { listarPacientes, crearPaciente } from "../../api/pacienteService";
+import apiClienteAnexo1 from "../../api/apiClienteAnexo1";
 import Loader from "../../../../components/Loader";
 
 export default function TramiteForm({ tramite, onSaved }) {
@@ -100,17 +101,16 @@ export default function TramiteForm({ tramite, onSaved }) {
     let pacData = null;
     try {
       
-      const response = await fetch(`http://optimus:8000/dinamica-microservice/genPacien/informacion/egreso/${busqueda}`);
-      //const response = await fetch(`http://localhost:8081/api/dinamica/genpacien/${busqueda}`);
-      const data = await response.json();
+      const response = await apiClienteAnexo1.get(`/api/proxy/ingreso/${busqueda}`);
+      const data = response.data;
       if (data && data.pacNumDoc) {
         pacData = {
           tipoDocumento: "CC",
           numeroDocumento: data.pacNumDoc,
-          nombreCompleto: `${data.pacPriNom || ""} ${data.pacSegNom || ""} ${data.pacPriApe || ""} ${data.pacSegApe || ""}`.trim(),
-          eps: data.pacCodEmp || "",
-          ingreso: data.ainIngreso || "",
-          servicio: data.ainSerProce || ""
+          nombreCompleto: data.nombreCompleto || "",
+          eps: data.entidad || "",
+          ingreso: String(data.ingreso || ""),
+          servicio: data.servicio || ""
         };
       }
     } catch {}

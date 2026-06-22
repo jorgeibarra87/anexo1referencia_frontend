@@ -40,7 +40,7 @@ const Login = () => {
         }
         spinnerLoginText("Por favor espere...");
         try{
-            const token2 = await  axios.post(`${ruta}${rutamicroservicioauth}/auth/login`, datos);
+            const token2 = await  axios.post(`${ruta}api/proxy/login`, datos);
             dispatch(iniciarSesionAction(token2.data));
             // Swal.close();
             //navigate('/'); // Redirige al usuario a '/'

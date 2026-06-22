@@ -49,22 +49,6 @@ export default function RutasConfig() {
         }
     }, [state])
 
-    useEffect(() => {
-        const isDevMode = window.env?.VITE_DEV_MODE === "true";
-
-        if (isDevMode && !state.token) {
-            const tokenReal = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NzA2OTY0MCIsImF1dGhvcml0aWVzIjoiUk9MRV9BRE1JTklTVFJBRE9SIiwibmFtZV91c2VyIjoiSk9SR0UgQVJNQU5ETyBJQkFSUkEgUEFMQUNJT1MiLCJpYXQiOjE3NzU3Mzc4ODcsImV4cCI6MTc3NTczODQ4N30.sZ8Hq27bsosfrsNWnv6uq36bsqp4uP06sLMGdLSQn08";
-
-            dispatch({
-                type: "INICIAR_SESION",
-                payload: {
-                    jwt: tokenReal,
-                    refreshToken: "fake-refresh"
-                }
-            });
-        }
-    }, [dispatch, state.token]);
-
     return (
         <HashRouter>
             <Routes>

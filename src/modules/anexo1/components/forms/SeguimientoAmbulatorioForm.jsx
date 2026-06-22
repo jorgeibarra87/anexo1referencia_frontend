@@ -7,6 +7,7 @@ import usePostSeguimientoAmbulatorio from "../../hooks/usePostSeguimientoAmbulat
 import { actualizar } from "../../api/seguimientoAmbulatorioService";
 import { listarTramites } from "../../api/tramiteService";
 import { crear as crearEgreso, actualizar as actualizarEgreso, obtenerPorTramiteId as obtenerEgreso } from "../../api/egresoService";
+import apiClienteAnexo1 from "../../api/apiClienteAnexo1";
 import Loader from "../../../../components/Loader";
 
 const MOCK_EGRESOS = [
@@ -61,27 +62,14 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
       return;
     }
 
-    let tramiteEncontrado = null;
-    try {
-      const todos = await listarTramites();
-      tramiteEncontrado = todos.find(t => t.ingreso === busqueda.trim());
-    } catch {}
-
-    if (!tramiteEncontrado) {
-      toast.info("No se encontró el trámite con egreso para ese ingreso");
-      setTramiteSeleccionado(null);
-      setEgresoInfo(null);
-      return;
-    }
-
     let egresoData = null;
     try {
-      const response = await fetch(`http://optimus:8000/dinamica-microservice/genPacien/informacion/egreso/${busqueda.trim()}`);
-      const data = await response.json();
-      if (data && data.egresoFecha) {
+      const response = await apiClienteAnexo1.get(`/api/proxy/egreso/${busqueda.trim()}`);
+      const data = response.data;
+      if (data && data.fechaEgreso) {
         egresoData = {
-          egresoFecha: data.egresoFecha,
-          egresoServicio: data.egresoServicio || ""
+          egresoFecha: data.fechaEgreso,
+          egresoServicio: (data.servicio || "").trim()
         };
       }
     } catch {}
@@ -97,15 +85,20 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
     }
 
     if (!egresoData) {
-      toast.info("No se encontró el trámite con egreso para ese ingreso");
+      toast.info("No se encontró información de egreso para ese ingreso");
       setTramiteSeleccionado(null);
       setEgresoInfo(null);
       return;
     }
 
+    let tramiteEncontrado = null;
+    try {
+      const todos = await listarTramites();
+      tramiteEncontrado = todos.find(t => t.ingreso === busqueda.trim());
+    } catch {}
+
     setTramiteSeleccionado(tramiteEncontrado);
     setEgresoInfo(egresoData);
-    toast.success("Trámite con egreso encontrado");
   };
 
   const handleSubmit = async (event) => {
@@ -121,6 +114,11 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
 
     if (!data.notaSeguimiento?.trim()) {
       toast.error("La nota de seguimiento es obligatoria");
+      return;
+    }
+
+    if (!esEdicion && !tramiteSeleccionado?.id) {
+      toast.error("Debe existir un trámite asociado a este ingreso para guardar el seguimiento");
       return;
     }
 
@@ -205,18 +203,27 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
               </div>
             )}
 
-            {tramiteSeleccionado && (
+            {(tramiteSeleccionado || egresoInfo) && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <h4 className="font-bold text-sm text-blue-800 mb-2">Datos del Trámite</h4>
+                {!tramiteSeleccionado && egresoInfo && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3 text-sm text-yellow-800 font-semibold">
+                    No se encontró un trámite local para este ingreso. Debe existir un trámite para guardar el seguimiento.
+                  </div>
+                )}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div><span className="font-semibold">ID Trámite:</span> {tramiteSeleccionado.id}</div>
-                  <div><span className="font-semibold">Fecha:</span> {tramiteSeleccionado.fechaTramite ? new Date(tramiteSeleccionado.fechaTramite).toLocaleDateString() : ""}</div>
-                  <div><span className="font-semibold">Paciente:</span> {tramiteSeleccionado.pacienteNombre || ""}</div>
-                  <div><span className="font-semibold">Documento:</span> {tramiteSeleccionado.pacienteDocumento || ""}</div>
-                  <div><span className="font-semibold">Ingreso:</span> {tramiteSeleccionado.ingreso || ""}</div>
-                  <div><span className="font-semibold">EPS:</span> {tramiteSeleccionado.pacienteEps || ""}</div>
-                  <div><span className="font-semibold">Servicio:</span> {tramiteSeleccionado.servicio || ""}</div>
-                  <div><span className="font-semibold">Estado Trámite:</span> {tramiteSeleccionado.estado || ""}</div>
+                  {tramiteSeleccionado && (
+                    <>
+                      <div><span className="font-semibold">ID Trámite:</span> {tramiteSeleccionado.id}</div>
+                      <div><span className="font-semibold">Fecha:</span> {tramiteSeleccionado.fechaTramite ? new Date(tramiteSeleccionado.fechaTramite).toLocaleDateString() : ""}</div>
+                      <div><span className="font-semibold">Paciente:</span> {tramiteSeleccionado.pacienteNombre || ""}</div>
+                      <div><span className="font-semibold">Documento:</span> {tramiteSeleccionado.pacienteDocumento || ""}</div>
+                      <div><span className="font-semibold">Ingreso:</span> {tramiteSeleccionado.ingreso || ""}</div>
+                      <div><span className="font-semibold">EPS:</span> {tramiteSeleccionado.pacienteEps || ""}</div>
+                      <div><span className="font-semibold">Servicio:</span> {tramiteSeleccionado.servicio || ""}</div>
+                      <div><span className="font-semibold">Estado Trámite:</span> {tramiteSeleccionado.estado || ""}</div>
+                    </>
+                  )}
                   {egresoInfo && (
                     <>
                       <div><span className="font-semibold">Fecha Egreso:</span> {egresoInfo.egresoFecha}</div>
