@@ -1,4 +1,6 @@
 import axios from "axios";
+import attachInterceptors, { configureAuthCallbacks } from "../../../api/authservice/attachInterceptors";
+import { clearTokens } from "../../../api/tokenStorage";
 
 const ruta = import.meta.env.VITE_API_BASE_URL || "http://localhost:8086/";
 
@@ -10,12 +12,13 @@ const apiClienteAnexo1 = axios.create({
   },
 });
 
-apiClienteAnexo1.interceptors.request.use((config) => {
-  const token = localStorage.getItem("tokenhusjp");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+configureAuthCallbacks({
+  logout: () => {
+    clearTokens();
+    window.location.hash = "#/login";
+  },
 });
+
+attachInterceptors(apiClienteAnexo1);
 
 export default apiClienteAnexo1;

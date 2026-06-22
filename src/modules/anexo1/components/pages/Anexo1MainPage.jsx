@@ -21,6 +21,14 @@ export default function Anexo1MainPage() {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const navigate = useNavigate();
 
+  const token = localStorage.getItem('tokenhusjp');
+  const payload = token ? JSON.parse(atob(token.split('.')[1])) : {};
+  const roles = Array.isArray(payload.authorities)
+    ? payload.authorities
+    : payload.authorities?.split(',').map(r => r.trim()) || [];
+
+  const tieneRol = (...rolesRequeridos) => rolesRequeridos.some(rol => roles.includes(rol));
+
   const toggleExpand = (id) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);

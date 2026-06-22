@@ -17,6 +17,14 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
   const [filtroSolicitud, setFiltroSolicitud] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
 
+  const token = localStorage.getItem('tokenhusjp');
+  const payload = token ? JSON.parse(atob(token.split('.')[1])) : {};
+  const roles = Array.isArray(payload.authorities)
+    ? payload.authorities
+    : payload.authorities?.split(',').map(r => r.trim()) || [];
+
+  const tieneRol = (...rolesRequeridos) => rolesRequeridos.some(rol => roles.includes(rol));
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -129,9 +137,11 @@ export default function SeguimientoIntraTable({ onEdit = () => {}, reloadFlag })
                   </td>
                   <td className="px-3 py-1.5 border-r border-gray-300">{item.auxiliarReferencia || ""}</td>
                   <td className="px-3 py-1.5">
-                    <button onClick={() => onEdit?.(item)} className="text-blue-600 hover:text-blue-800">
-                      <FontAwesomeIcon icon={faPencilAlt} className="w-5 h-5" />
-                    </button>
+                    {tieneRol('ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_ANEXO1') && (
+                      <button onClick={() => onEdit?.(item)} className="text-blue-600 hover:text-blue-800">
+                        <FontAwesomeIcon icon={faPencilAlt} className="w-5 h-5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

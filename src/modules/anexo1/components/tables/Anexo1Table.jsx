@@ -10,6 +10,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-solid-svg-icons";
 
 export default function Anexo1Table() {
+  const token = localStorage.getItem('tokenhusjp');
+  const payload = token ? JSON.parse(atob(token.split('.')[1])) : {};
+  const roles = Array.isArray(payload.authorities)
+    ? payload.authorities
+    : payload.authorities?.split(',').map(r => r.trim()) || [];
+
+  const tieneRol = (...rolesRequeridos) => rolesRequeridos.some(rol => roles.includes(rol));
+
   const { data: tramites, loading, error, refetch } = useFetchTramites();
   const { data: seguimientosIntra, fetchPorTramite: fetchIntra } = useFetchSeguimientoIntra();
   const { fetchPorTramite: fetchEgreso } = useFetchEgresos();
@@ -100,10 +108,10 @@ export default function Anexo1Table() {
     <div className="overflow-x-auto shadow-md rounded-lg pb-4">
       <div className="flex justify-between items-center p-2">
         <h2 className="text-lg font-bold">Anexo 1 - Referencia y Contrareferencia</h2>
-        <button onClick={handleExport}
+        {tieneRol('ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_ANEXO1') && (<button onClick={handleExport}
           className="text-white rounded-lg px-3 py-2 bg-blue-600 hover:bg-blue-700 text-sm">
           Exportar a Excel
-        </button>
+        </button>)}
       </div>
 
       <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 200px)" }}>

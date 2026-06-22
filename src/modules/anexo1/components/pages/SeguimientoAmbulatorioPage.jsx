@@ -11,6 +11,14 @@ export default function SeguimientoAmbulatorioPage() {
   const [reloadFlag, setReloadFlag] = useState(0);
   const navigate = useNavigate();
 
+  const token = localStorage.getItem('tokenhusjp');
+  const payload = token ? JSON.parse(atob(token.split('.')[1])) : {};
+  const roles = Array.isArray(payload.authorities)
+    ? payload.authorities
+    : payload.authorities?.split(',').map(r => r.trim()) || [];
+
+  const tieneRol = (...rolesRequeridos) => rolesRequeridos.some(rol => roles.includes(rol));
+
   const handleEdit = (item) => {
     setSelectedItem(item);
     setModo('editar');
@@ -63,10 +71,10 @@ export default function SeguimientoAmbulatorioPage() {
               <FontAwesomeIcon icon={faFileMedical} className="w-8 h-8 text-black pr-2" />Seguimiento Ambulatorio
             </h1>
           </div>
-          <button onClick={handleCrear}
+          {tieneRol('ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_ANEXO1') && (<button onClick={handleCrear}
             className="hover:cursor-pointer mr-10 mt-2 lg:mt-0 px-2 py-2 bg-green-600 text-white font-semibold text-md rounded hover:bg-green-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
             <FontAwesomeIcon icon={faPlus} className="w-4 h-4 text-white pr-2" />Nuevo Seguimiento
-          </button>
+          </button>)}
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
           <button onClick={() => navigate('/anexo1/general')}

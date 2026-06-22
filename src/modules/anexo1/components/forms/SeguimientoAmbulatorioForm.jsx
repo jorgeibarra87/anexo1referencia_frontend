@@ -26,6 +26,13 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
 
   const esEdicion = !!item;
   const token = localStorage.getItem("tokenhusjp");
+  const payload = token ? jwtDecode(token) : {};
+  const roles = Array.isArray(payload.authorities)
+    ? payload.authorities
+    : payload.authorities?.split(',').map(r => r.trim()) || [];
+
+  const tieneRol = (...rolesRequeridos) => rolesRequeridos.some(rol => roles.includes(rol));
+
   let nombreUsuario = "";
   if (token) {
     try {
@@ -255,10 +262,10 @@ export default function SeguimientoAmbulatorioForm({ item, onSaved }) {
       </div>
 
       <div className="flex justify-end mt-6">
-        <button type="submit"
+        {tieneRol('ROLE_ADMINISTRADOR', 'ROLE_REFERENCIA_ANEXO1') && (<button type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500 transition duration-300">
           {esEdicion ? "Actualizar" : "Guardar"}
-        </button>
+        </button>)}
       </div>
     </form>
   );
